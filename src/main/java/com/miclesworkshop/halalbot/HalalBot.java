@@ -128,7 +128,13 @@ class HalalBot {
             // add the approval role to the user if they just joined
             server.getRolesByNameIgnoreCase("Approval").stream()
                     .findFirst()
-                    .ifPresent(role -> server.addRoleToUser(user, role));
+                    .ifPresent(role -> {
+                        try {
+                            server.addRoleToUser(user, role).get();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
 
             getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " welcome to " + server.getName() + "!\n" +
                     "To be able to join in on the conversation, please begin the application process by typing `*apply`.");
