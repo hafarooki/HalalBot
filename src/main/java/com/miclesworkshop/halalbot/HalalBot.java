@@ -35,10 +35,10 @@ public class HalalBot {
 
     private File serverDataFile;
 
-    public HalalBot(String token) {
+    public HalalBot(File dataFolder, String token) {
         discordApi = new DiscordApiBuilder().setToken(token).login().join();
 
-        serverDataFile = new File("server_data.json");
+        serverDataFile = new File(dataFolder, "server_data.json");
 
         approvalCommands = new ApprovalCommands(this);
 

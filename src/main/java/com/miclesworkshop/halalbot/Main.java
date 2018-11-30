@@ -2,13 +2,14 @@ package com.miclesworkshop.halalbot;
 
 import org.apache.commons.cli.*;
 
+import java.io.File;
+
 public class Main {
     public static void main(String[] args) {
         Options options = new Options();
 
-        Option option = new Option("t", "token", true, "Discord API Token");
-        option.setRequired(true);
-        options.addOption(option);
+        addOption(options, "datafolder", "Data Folder");
+        addOption(options, "token", "Discord API Token");
 
         CommandLineParser parser = new DefaultParser();
 
@@ -24,6 +25,18 @@ public class Main {
 
         String token = line.getOptionValue("token");
 
-        new HalalBot(token);
+        File dataFolder = new File(line.getOptionValue("datafolder"));
+
+        if (dataFolder.mkdirs()) {
+            System.out.println("Created data folder " + dataFolder.getPath());
+        }
+
+        new HalalBot(dataFolder, token);
+    }
+
+    private static void addOption(Options options, String opt, String description) {
+        Option option = new Option(opt, true, description);
+        option.setRequired(true);
+        options.addOption(option);
     }
 }
