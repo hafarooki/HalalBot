@@ -86,7 +86,7 @@ public class HalalBot {
 
         for (ServerTextChannel channel : server.getTextChannels()) {
             if (channel.getName().startsWith("approval-")) {
-                log.info("Would delete " + channel.getName());
+                channel.delete("Broke stuff, gotta fix");
             }
         }
     }
