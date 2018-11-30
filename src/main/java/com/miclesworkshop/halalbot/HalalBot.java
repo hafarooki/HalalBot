@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class HalalBot {
+class HalalBot {
     private DiscordApi discordApi;
     private Logger log = Logger.getLogger(getClass().getName());
     private ApprovalCommands approvalCommands;
@@ -37,7 +37,7 @@ public class HalalBot {
 
     private File serverDataFile;
 
-    public HalalBot(File dataFolder, String token) {
+    HalalBot(File dataFolder, String token) {
         discordApi = new DiscordApiBuilder().setToken(token).login().join();
 
         serverDataFile = new File(dataFolder, "server_data.json");
@@ -51,7 +51,7 @@ public class HalalBot {
         printInvite();
     }
 
-    public synchronized void saveData() {
+    synchronized void saveData() {
         try (FileWriter writer = new FileWriter(serverDataFile)) {
             new Gson().toJson(serverDataMap, writer);
         } catch (IOException e) {
@@ -86,7 +86,7 @@ public class HalalBot {
         getApprovalModeratorRole(server);
     }
 
-    public Role getApprovalModeratorRole(Server server) {
+    Role getApprovalModeratorRole(Server server) {
         return server.getRolesByName("Approval Moderator").stream().findFirst().orElseGet(() -> {
             try {
                 return server.createRoleBuilder()
@@ -117,16 +117,21 @@ public class HalalBot {
         discordApi.addServerMemberJoinListener(event -> {
             User user = event.getUser();
 
+            if (user.isBot()) {
+                return;
+            }
+
             Server server = event.getServer();
 
             log.info(user.getName() + " joined " + server.getName() + " ! Creating channel");
 
             // add the approval role to the user if they just joined
-            server.getRolesByNameIgnoreCase("Approval").stream().findFirst().ifPresent(role ->
-                    server.addRoleToUser(user, role)
-            );
+            server.getRolesByNameIgnoreCase("Approval").stream()
+                    .findFirst()
+                    .ifPresent(role -> server.addRoleToUser(user, role));
 
-            createApprovalChannelIfAbsent(server, user);
+            getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " welcome to " + server.getName() + "!\n" +
+                    "To be able to join in on the conversation, please begin the application process by typing `*apply`.");
         });
 
         discordApi.addServerMemberLeaveListener(event -> {
@@ -150,15 +155,15 @@ public class HalalBot {
             }
         });
 
-        discordApi.addMessageCreateListener(event -> {
-            event.getServerTextChannel().ifPresent(channel -> event.getMessageAuthor().asUser().ifPresent(user ->
-                            approvalCommands.parseMessage(channel.getServer(), user, channel, event.getMessage())
-                    )
-            );
-        });
+        discordApi.addMessageCreateListener(event -> event
+                .getServerTextChannel().ifPresent(channel -> event
+                        .getMessageAuthor().asUser()
+                        .ifPresent(user -> approvalCommands.parseMessage(channel.getServer(), user, channel, event.getMessage()))
+                )
+        );
     }
 
-    public void createApprovalChannelIfAbsent(Server server, User user) {
+    void createApprovalChannelIfAbsent(Server server, User user) {
         Optional<ServerTextChannel> channel = getApprovalChannel(server, user);
 
         if (channel.isPresent()) {
@@ -183,10 +188,11 @@ public class HalalBot {
                                 "if you heard it from a friend, give their name, " +
                                 "and if it is through searching on the Internet, give the link to where you found it)__",
                         "**4)** What do you want to do in this server?"
-                ));
+                )
+        );
     }
 
-    public void closeApprovalChannel(ServerTextChannel channel, String reason, @Nullable User closer) {
+    void closeApprovalChannel(ServerTextChannel channel, String reason, @Nullable User closer) {
         String channelName = channel.getName();
         Preconditions.checkArgument(channelName.startsWith("approval-"));
 
@@ -202,7 +208,7 @@ public class HalalBot {
         channel.delete("Approval channel closed " + whoDoneIt + " for " + reason);
     }
 
-    public Optional<ServerTextChannel> getLimboChannel(Server server) {
+    Optional<ServerTextChannel> getLimboChannel(Server server) {
         ServerData serverData = getServerData(server);
         long limboChannelId = serverData.getLimboChannel();
 
@@ -213,9 +219,9 @@ public class HalalBot {
         return server.getTextChannelById(limboChannelId);
     }
 
-    public ServerTextChannel getOrCreateLimboChannel(Server server) {
-        return getLimboChannel(server).orElseGet(() -> server.getTextChannelsByNameIgnoreCase("approval").stream()
-                .findFirst().orElseGet(() -> {
+    private ServerTextChannel getOrCreateLimboChannel(Server server) {
+        return getLimboChannel(server).orElseGet(() -> server.getTextChannelsByNameIgnoreCase("approval")
+                .stream().findFirst().orElseGet(() -> {
                     try {
                         ServerTextChannel channel = server.createTextChannelBuilder()
                                 .setName("approval")
@@ -285,15 +291,11 @@ public class HalalBot {
         }
     }
 
-    public DiscordApi getDiscordApi() {
+    DiscordApi getDiscordApi() {
         return discordApi;
     }
 
-    public Map<Long, ServerData> getServerDataMap() {
-        return serverDataMap;
-    }
-
-    public ServerData getServerData(Server server) {
+    ServerData getServerData(Server server) {
         return serverDataMap.computeIfAbsent(server.getId(), id -> new ServerData());
     }
 }
