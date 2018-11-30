@@ -133,13 +133,47 @@ public class ApprovalCommands {
                     return;
                 }
 
-                message.getMentionedUsers().forEach(newMod -> {
-                    server.addRoleToUser(newMod, bot.getApprovalModeratorRole(server));
+                Role approvalModeratorRole = bot.getApprovalModeratorRole(server);
+
+                for (User newMod : message.getMentionedUsers()) {
+                    if (server.getRoles(newMod).contains(approvalModeratorRole)) {
+                        channel.sendMessage(newMod.getName() + " is already an approval moderator!");
+                        continue;
+                    }
+
+                    server.addRoleToUser(newMod, approvalModeratorRole);
                     newMod.sendMessage("You've been made an approval moderator by " + user.getName() + " in " + server.getName() + "!");
-                    channel.sendMessage("Made " + newMod.getName() + " an approval moderator in " + server.getName());
+                    channel.sendMessage("Made " + newMod.getName() + " an approval moderator.");
 
                     log.info(user.getName() + " made " + newMod.getName() + " an approval moderator in " + server.getName());
-                });
+                }
+
+                break;
+            }
+            case "*removemod": {
+                if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
+                    return;
+                }
+
+                if (message.getMentionedUsers().isEmpty()) {
+                    channel.sendMessage("You must mention the users you want to add as mods!");
+                    return;
+                }
+
+                Role approvalModeratorRole = bot.getApprovalModeratorRole(server);
+
+                for (User newMod : message.getMentionedUsers()) {
+                    if (!server.getRoles(newMod).contains(approvalModeratorRole)) {
+                        channel.sendMessage(newMod.getName() + " isn't an approval moderator!");
+                        continue;
+                    }
+
+                    server.removeRoleFromUser(newMod, approvalModeratorRole);
+                    newMod.sendMessage("You've been removed as an approval moderator by " + user.getName() + " in " + server.getName() + "!");
+                    channel.sendMessage("Made " + newMod.getName() + " not approval moderator.");
+
+                    log.info(user.getName() + " made " + newMod.getName() + " no longer an approval moderator in " + server.getName());
+                }
 
                 break;
             }
