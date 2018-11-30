@@ -42,6 +42,22 @@ class HalalBot {
 
         serverDataFile = new File(dataFolder, "server_data.json");
 
+        if (!serverDataFile.exists()) {
+            log.info("Creating new server data file...");
+            serverDataMap = new HashMap<>();
+            saveData();
+        } else {
+            log.info("Reading server data...");
+            try (FileReader reader = new FileReader(serverDataFile)) {
+                Type type = new TypeToken<Map<Long, ServerData>>() {
+                }.getType();
+                serverDataMap = new Gson().fromJson(reader, type);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            log.info("  -> Read " + serverDataMap.size() + " servers.");
+        }
+
         approvalCommands = new ApprovalCommands(this);
 
         registerListeners();
@@ -65,19 +81,6 @@ class HalalBot {
         log.info("  -> Own Roles: " + server.getRoles(discordApi.getYourself()).stream().map(Role::getName).collect(Collectors.joining(", ")));
 
         getOrCreateLimboChannel(server);
-
-        if (!serverDataFile.exists()) {
-            serverDataMap = new HashMap<>();
-            saveData();
-        } else {
-            try (FileReader reader = new FileReader(serverDataFile)) {
-                Type type = new TypeToken<Map<Long, ServerData>>() {
-                }.getType();
-                serverDataMap = new Gson().fromJson(reader, type);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
 
         if (!serverDataMap.containsKey(server.getId())) {
             log.info("  -> Data not registered, registering...");
@@ -308,6 +311,11 @@ class HalalBot {
     }
 
     ServerData getServerData(Server server) {
-        return serverDataMap.computeIfAbsent(server.getId(), id -> new ServerData());
+        return serverDataMap.computeIfAbsent(server.getId(), id -> {
+            ServerData serverData = new ServerData();
+            serverData.setLimboChannel(0);
+            serverData.setRoles(new HashMap<>());
+            return serverData;
+        });
     }
 }
