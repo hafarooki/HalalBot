@@ -228,19 +228,23 @@ class HalalBot {
     }
 
     ServerTextChannel getOrCreateLimboChannel(Server server) {
-        return getLimboChannel(server).orElseGet(() -> server.getTextChannelsByNameIgnoreCase("approval")
-                .stream().findFirst().orElseGet(() -> {
-                    try {
-                        ServerTextChannel channel = server.createTextChannelBuilder()
-                                .setName("approval")
-                                .create().get();
-                        getServerData(server).setLimboChannel(channel.getId());
-                        saveData();
-                        return channel;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+        return getLimboChannel(server).orElseGet(() -> {
+                    ServerTextChannel channel = server.getTextChannelsByNameIgnoreCase("approval").stream().findFirst().orElseGet(() -> {
+                        try {
+                            log.info("Creating limbo #approval channel!");
+                            return server.createTextChannelBuilder()
+                                    .setName("approval")
+                                    .create().get();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+                    getServerData(server).setLimboChannel(channel.getId());
+                    saveData();
+
+                    return channel;
+                }
         );
     }
 
