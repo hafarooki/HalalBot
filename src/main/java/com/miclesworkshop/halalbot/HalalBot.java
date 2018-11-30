@@ -216,7 +216,7 @@ class HalalBot {
         channel.delete("Approval channel closed " + whoDoneIt + " for " + reason);
     }
 
-    Optional<ServerTextChannel> getLimboChannel(Server server) {
+    private Optional<ServerTextChannel> getLimboChannel(Server server) {
         ServerData serverData = getServerData(server);
         long limboChannelId = serverData.getLimboChannel();
 
@@ -227,7 +227,7 @@ class HalalBot {
         return server.getTextChannelById(limboChannelId);
     }
 
-    public ServerTextChannel getOrCreateLimboChannel(Server server) {
+    ServerTextChannel getOrCreateLimboChannel(Server server) {
         return getLimboChannel(server).orElseGet(() -> server.getTextChannelsByNameIgnoreCase("approval")
                 .stream().findFirst().orElseGet(() -> {
                     try {
