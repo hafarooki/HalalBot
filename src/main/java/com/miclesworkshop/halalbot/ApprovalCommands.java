@@ -123,6 +123,24 @@ public class ApprovalCommands {
 
                 return;
             }
+            case "*addmod": {
+                if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
+                    return;
+                }
+
+                if (message.getMentionedUsers().isEmpty()) {
+                    channel.sendMessage("You must mention the users you want to add as mods!");
+                    return;
+                }
+
+                message.getMentionedUsers().forEach(newMod -> {
+                    server.addRoleToUser(newMod, bot.getApprovalModeratorRole(server));
+                    newMod.sendMessage("You've been made an approval moderator by " + user.getName() + " in " + server.getName() + "!");
+                    channel.sendMessage("Made " + newMod.getName() + " an approval moderator in " + server.getName());
+
+                    log.info(user.getName() + " made " + newMod.getName() + " an approval moderator in " + server.getName());
+                });
+            }
             case "*listroles": {
                 if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
                     return;
