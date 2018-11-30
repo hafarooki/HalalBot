@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ChannelCategory;
+import org.javacord.api.entity.channel.ServerChannel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.permission.PermissionType;
@@ -131,15 +132,17 @@ public class HalalBot {
         discordApi.addServerMemberJoinListener(event -> {
             User user = event.getUser();
 
-            log.info(user.getName() + " joined! Creating channel");
+            Server server = event.getServer();
 
-            ServerTextChannel channel = createApprovalChannel(event.getServer(), user);
+            log.info(user.getName() + " joined " + server.getName() + " ! Creating channel");
+
+            ServerTextChannel channel = createApprovalChannel(server, user);
 
             try {
                 channel.createUpdater()
-                        .addPermissionOverwrite(event.getServer().getEveryoneRole(), new PermissionsBuilder()
+                        .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
                                 .setDenied(PermissionType.READ_MESSAGES).build())
-                        .addPermissionOverwrite(getApprovalModeratorRole(event.getServer()), new PermissionsBuilder()
+                        .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
                                 .setAllowed(PermissionType.READ_MESSAGES).build())
                         .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
                                 .setAllowed(PermissionType.READ_MESSAGES).build())
@@ -150,7 +153,7 @@ public class HalalBot {
                 throw new RuntimeException(exception);
             }
 
-            channel.sendMessage(user.getMentionTag() + " welcome to the " + event.getServer().getName() + " Discord server! " +
+            channel.sendMessage(user.getMentionTag() + " welcome to the " + server.getName() + " Discord server! " +
                     "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
                     "Please answer the following questions:\n" +
                     String.join("\n",
@@ -165,14 +168,14 @@ public class HalalBot {
         discordApi.addServerMemberLeaveListener(event -> {
             User user = event.getUser();
 
-            log.info(user.getName() + " left! Deleting channel if exists");
+            Server server = event.getServer();
 
-            event.getServer()
-                    .getChannelsByName(getApprovalChannelName(user))
-                    .forEach(channel -> {
-                        log.info("Deleted channel " + channel.getName());
-                        channel.delete("User left the server");
-                    });
+            log.info(user.getName() + " left " + server.getName() + "! Deleting channel if exists");
+
+            for (ServerChannel channel : server.getChannelsByName(getApprovalChannelName(user))) {
+                log.info("Deleted channel " + channel.getName());
+                channel.delete("User left the server");
+            }
         });
 
         discordApi.addMessageCreateListener(event -> {
