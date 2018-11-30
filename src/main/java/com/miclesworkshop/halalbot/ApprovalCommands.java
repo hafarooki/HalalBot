@@ -78,7 +78,7 @@ public class ApprovalCommands {
                     channel.delete(approvedUser.getName() + " was approved by " + approvedUser.getName() + ".");
 
                     // inform the person who was approved
-                    approvedUser.sendMessage("You were approved in" + server.getName() + " as a " + role.getName() + "!");
+                    approvedUser.sendMessage("You were approved in " + server.getName() + " as a " + role.getName() + "!");
 
                     // inform the person who approved them
                     user.sendMessage("Approved user " + approvedUser.getName() + " as a " + role.getName());
