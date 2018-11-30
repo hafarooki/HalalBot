@@ -227,7 +227,7 @@ class HalalBot {
         return server.getTextChannelById(limboChannelId);
     }
 
-    private ServerTextChannel getOrCreateLimboChannel(Server server) {
+    public ServerTextChannel getOrCreateLimboChannel(Server server) {
         return getLimboChannel(server).orElseGet(() -> server.getTextChannelsByNameIgnoreCase("approval")
                 .stream().findFirst().orElseGet(() -> {
                     try {

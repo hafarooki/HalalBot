@@ -124,14 +124,7 @@ public class ApprovalCommands {
                 return;
             }
             case "*apply": {
-                Optional<ServerTextChannel> limboChannelOptional = bot.getLimboChannel(server);
-
-                if (!limboChannelOptional.isPresent()) {
-                    channel.sendMessage("No limbo channel found!");
-                    return;
-                }
-
-                ServerTextChannel limboChannel = limboChannelOptional.get();
+                ServerTextChannel limboChannel = bot.getOrCreateLimboChannel(server);
 
                 if (channel.getId() != limboChannel.getId()) {
                     channel.sendMessage("This can only be done in " + limboChannel.getMentionTag());
