@@ -85,6 +85,21 @@ public class HalalBot {
         getApprovalModeratorRole(server);
 
         getApprovalCategory(server);
+
+        server.getRolesByNameIgnoreCase("Approval").stream().findFirst().ifPresent(approvalRole -> {
+            for (User user : server.getMembers()) {
+                if (server.getRoles(user).contains(approvalRole)) {
+
+                    Optional<ServerTextChannel> approvalChannel = getApprovalChannel(server, user);
+                    if (approvalChannel.isPresent()) {
+                        continue;
+                    }
+
+                    log.info("Created approval channel for " + user.getName() + " because they had the approval role.");
+                    createApprovalChannel(server, user);
+                }
+            }
+        });
     }
 
     public Role getApprovalModeratorRole(Server server) {
