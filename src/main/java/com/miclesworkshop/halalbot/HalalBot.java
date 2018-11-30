@@ -137,6 +137,11 @@ public class HalalBot {
                 throw new RuntimeException(exception);
             }
 
+            // add the approval role to the user if they just joined
+            server.getRolesByNameIgnoreCase("Approval").stream().findFirst().ifPresent(role ->
+                    server.addRoleToUser(user, role)
+            );
+
             channel.sendMessage(user.getMentionTag() + " welcome to the " + server.getName() + " Discord server! " +
                     "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
                     "Please answer the following questions:\n" +
