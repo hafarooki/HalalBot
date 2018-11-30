@@ -140,6 +140,8 @@ public class ApprovalCommands {
 
                     log.info(user.getName() + " made " + newMod.getName() + " an approval moderator in " + server.getName());
                 });
+
+                break;
             }
             case "*listroles": {
                 if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
