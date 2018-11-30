@@ -84,22 +84,11 @@ public class HalalBot {
 
         getApprovalModeratorRole(server);
 
-        getApprovalCategory(server);
-
-        server.getRolesByNameIgnoreCase("Approval").stream().findFirst().ifPresent(approvalRole -> {
-            for (User user : server.getMembers()) {
-                if (server.getRoles(user).contains(approvalRole)) {
-
-                    Optional<ServerTextChannel> approvalChannel = getApprovalChannel(server, user);
-                    if (approvalChannel.isPresent()) {
-                        continue;
-                    }
-
-                    log.info("Created approval channel for " + user.getName() + " because they had the approval role.");
-                    createApprovalChannel(server, user);
-                }
+        for (ServerTextChannel channel : server.getTextChannels()) {
+            if (channel.getName().startsWith("approval-")) {
+                log.info("Would delete " + channel.getName());
             }
-        });
+        }
     }
 
     public Role getApprovalModeratorRole(Server server) {
@@ -110,20 +99,6 @@ public class HalalBot {
                         .setAuditLogReason("Approval role was missing, created")
                         .setDisplaySeparately(false)
                         .setMentionable(true)
-                        .create().get();
-            } catch (Exception exception) {
-                throw new RuntimeException(exception);
-            }
-        });
-    }
-
-    public ChannelCategory getApprovalCategory(Server server) {
-        String approvalCategoryName = "Approval";
-        return server.getChannelCategoriesByName(approvalCategoryName).stream().findFirst().orElseGet(() -> {
-            try {
-                return server.createChannelCategoryBuilder()
-                        .setAuditLogReason("Approval category missing, created it.")
-                        .setName(approvalCategoryName)
                         .create().get();
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
@@ -214,11 +189,10 @@ public class HalalBot {
     }
 
     private Optional<ServerTextChannel> getApprovalChannel(Server server, User user) {
-        ChannelCategory category = getApprovalCategory(server);
         return server.getTextChannels().stream()
                 .filter(channel -> {
                     Optional<ChannelCategory> channelCategory = channel.getCategory();
-                    return channelCategory.isPresent() && channelCategory.get().equals(category);
+                    return channelCategory.isPresent() && channelCategory.get().getName().startsWith("Approval");
                 })
                 .filter(channel -> channel.getName().equals(getApprovalChannelName(user)))
                 .findFirst();
@@ -229,10 +203,22 @@ public class HalalBot {
 
         Preconditions.checkState(server.getChannelsByName(channelName).isEmpty());
 
+        String approvalCategoryName = "Approval";
+        ChannelCategory category = server.getChannelCategoriesByName(approvalCategoryName).stream().findFirst().orElseGet(() -> {
+            try {
+                return server.createChannelCategoryBuilder()
+                        .setAuditLogReason("Approval category missing, created it.")
+                        .setName(approvalCategoryName)
+                        .create().get();
+            } catch (Exception exception1) {
+                throw new RuntimeException(exception1);
+            }
+        });
+
         try {
             return server.createTextChannelBuilder()
                     .setName(channelName)
-                    .setCategory(getApprovalCategory(server))
+                    .setCategory(category)
                     .create().get();
         } catch (Exception exception) {
             throw new RuntimeException(exception);

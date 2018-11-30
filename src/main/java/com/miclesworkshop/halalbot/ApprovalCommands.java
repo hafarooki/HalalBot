@@ -256,7 +256,7 @@ public class ApprovalCommands {
     }
 
     private boolean ensureApprovalChannel(ServerTextChannel channel) {
-        return channel.getName().startsWith("approval-") && channel.getCategory().orElse(null) == bot.getApprovalCategory(channel.getServer());
+        return channel.getName().startsWith("approval-") && channel.getCategory().isPresent() && channel.getCategory().get().getName().startsWith("Approval");
     }
 
     private boolean checkModerator(Server server, TextChannel channel, User user) {
