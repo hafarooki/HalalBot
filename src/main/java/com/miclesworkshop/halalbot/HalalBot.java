@@ -1,6 +1,8 @@
 package com.miclesworkshop.halalbot;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ChannelCategory;
@@ -13,6 +15,13 @@ import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -22,8 +31,14 @@ public class HalalBot {
     private Logger log = Logger.getLogger(getClass().getName());
     private Commands commands;
 
+    private Map<Long, ServerData> serverDataMap = new HashMap<>();
+
+    private File serverDataFile;
+
     public HalalBot(String token) {
         discordApi = new DiscordApiBuilder().setToken(token).login().join();
+
+        serverDataFile = new File("server_data.json");
 
         commands = new Commands(this);
 
@@ -34,10 +49,37 @@ public class HalalBot {
         printInvite();
     }
 
+    public void saveData() {
+        try (FileWriter writer = new FileWriter(serverDataFile)) {
+            new Gson().toJson(serverDataMap, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void initServer(Server server) {
         log.info("Initializing " + server.getName());
 
         log.info("  -> Own Roles: " + server.getRoles(discordApi.getYourself()).stream().map(Role::getName).collect(Collectors.joining(", ")));
+
+        if (!serverDataFile.exists()) {
+            serverDataMap = new HashMap<>();
+            saveData();
+        } else {
+            try (FileReader reader = new FileReader(serverDataFile)) {
+                Type type = new TypeToken<Map<Long, ServerData>>() {
+                }.getType();
+                serverDataMap = new Gson().fromJson(reader, type);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (!serverDataMap.containsKey(server.getId())) {
+            log.info("  -> Data not registered, registering...");
+            getServerData(server);
+            saveData();
+        }
 
         getApprovalModeratorRole(server);
 
@@ -180,5 +222,13 @@ public class HalalBot {
 
     public DiscordApi getDiscordApi() {
         return discordApi;
+    }
+
+    public Map<Long, ServerData> getServerDataMap() {
+        return serverDataMap;
+    }
+
+    public ServerData getServerData(Server server) {
+        return serverDataMap.computeIfAbsent(server.getId(), id -> new ServerData());
     }
 }
