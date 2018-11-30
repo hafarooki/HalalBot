@@ -24,6 +24,6 @@ public class Main {
 
         String token = line.getOptionValue("token");
 
-        HalalBot bot = new HalalBot(token);
+        new HalalBot(token);
     }
 }

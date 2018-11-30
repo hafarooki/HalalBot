@@ -1,6 +1,9 @@
 plugins {
     id 'java'
+    id 'application'
 }
+
+mainClassName = "com.miclesworkshop.halalbot.Main"
 
 group 'com.miclesworkshop'
 version '0.1-SNAPSHOT'
