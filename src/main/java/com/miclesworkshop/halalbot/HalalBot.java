@@ -169,8 +169,6 @@ public class HalalBot {
         channel = createApprovalChannel(server, user);
 
         if (!channel.isPresent()) {
-            getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " there were too many approval " +
-                    "tickets to process your request! Please ask an approval moderator to clear some old ones.");
             return;
         }
 
@@ -188,7 +186,7 @@ public class HalalBot {
                 ));
     }
 
-    public void closeApprovalChannel(ServerTextChannel channel, @Nullable User closer) {
+    public void closeApprovalChannel(ServerTextChannel channel, String reason, @Nullable User closer) {
         String channelName = channel.getName();
         Preconditions.checkArgument(channelName.startsWith("approval-"));
 
@@ -196,12 +194,12 @@ public class HalalBot {
 
         discordApi.getUserById(channelName.replaceFirst("approval-", ""))
                 .thenAccept(user -> getOrCreateLimboChannel(channel.getServer())
-                        .sendMessage("Your approval ticket has been closed in " + channel.getServer().getName()
-                                + whoDoneIt + " for inactivity or some other reason. " +
-                                "Please use `*apply` in this limbo channel to apply again.")
+                        .sendMessage(user.getMentionTag() + " your approval ticket has been closed "
+                                + whoDoneIt + ". Reason: " + reason + "\n\n" +
+                                "Please say `*apply` in this limbo channel to apply again.")
                 );
 
-        channel.delete("Approval channel closed " + whoDoneIt);
+        channel.delete("Approval channel closed " + whoDoneIt + " for " + reason);
     }
 
     public Optional<ServerTextChannel> getLimboChannel(Server server) {
@@ -264,6 +262,8 @@ public class HalalBot {
         });
 
         if (category.getChannels().size() > 45) {
+            getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " there were too many approval " +
+                    "tickets to process your request! Please ask an approval moderator to clear some old ones.");
             return Optional.empty();
         }
 

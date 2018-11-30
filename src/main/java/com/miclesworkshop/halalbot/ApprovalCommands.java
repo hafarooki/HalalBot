@@ -139,6 +139,7 @@ public class ApprovalCommands {
                 }
 
                 bot.createApprovalChannelIfAbsent(server, user);
+                break;
             }
             case "*close": {
                 if (!checkModerator(server, channel, user)) {
@@ -149,7 +150,15 @@ public class ApprovalCommands {
                     return;
                 }
 
-                bot.closeApprovalChannel(channel, user);
+                if (split.length == 1) {
+                    channel.sendMessage("Reason required! Usage: `*close <reason>`");
+                    return;
+                }
+
+                String reason = content.substring(7);
+
+                bot.closeApprovalChannel(channel, reason, user);
+                break;
             }
             case "*addmod": {
                 if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {

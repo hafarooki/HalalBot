@@ -226,3 +226,4 @@ gradle-app.setting
 .idea
 
 server_data.json
+instance.lock
