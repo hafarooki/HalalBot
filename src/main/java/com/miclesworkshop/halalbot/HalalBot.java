@@ -13,10 +13,12 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class HalalBot {
     private DiscordApi discordApi;
+    private Logger log = Logger.getLogger("HalalBot");
 
     public HalalBot(String token) {
         discordApi = new DiscordApiBuilder().setToken(token).login().join();
@@ -29,6 +31,10 @@ public class HalalBot {
     }
 
     private void initServer(Server server) {
+        log.info("Initializing " + server.getName());
+
+        log.info("  -> Own Roles: " + server.getRoles(discordApi.getYourself()).stream().map(Role::getName).collect(Collectors.joining(", ")));
+
         getApprovalModeratorRole(server);
 
         getApprovalCategory(server);
@@ -69,7 +75,11 @@ public class HalalBot {
     }
 
     private void registerListeners() {
-        discordApi.addServerJoinListener(event -> initServer(event.getServer()));
+        discordApi.addServerJoinListener(event -> {
+            Server server = event.getServer();
+            log.info("Joined " + server.getName());
+            initServer(server);
+        });
         discordApi.addServerBecomesAvailableListener(event -> initServer(event.getServer()));
 
         discordApi.addServerMemberJoinListener(event -> {
@@ -80,6 +90,8 @@ public class HalalBot {
                         .addPermissionOverwrite(event.getServer().getEveryoneRole(), new PermissionsBuilder()
                                 .setDenied(PermissionType.READ_MESSAGES).build())
                         .addPermissionOverwrite(getApprovalModeratorRole(event.getServer()), new PermissionsBuilder()
+                                .setAllowed(PermissionType.READ_MESSAGES).build())
+                        .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
                                 .setAllowed(PermissionType.READ_MESSAGES).build())
                         .addPermissionOverwrite(event.getUser(), new PermissionsBuilder()
                                 .setAllowed(PermissionType.READ_MESSAGES).build())
