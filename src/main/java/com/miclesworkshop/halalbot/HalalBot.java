@@ -108,7 +108,7 @@ public class HalalBot {
                 throw new RuntimeException(exception);
             }
 
-            channel.sendMessage(user.getMentionTag() + " welcome to the " + event.getServer().getName() + " Discord server!\n\n" +
+            channel.sendMessage(user.getMentionTag() + " welcome to the " + event.getServer().getName() + " Discord server!" +
                     "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
                     "Please answer the following questions:\n" +
                     String.join("\n",
