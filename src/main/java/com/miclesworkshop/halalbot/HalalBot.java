@@ -64,6 +64,8 @@ class HalalBot {
 
         log.info("  -> Own Roles: " + server.getRoles(discordApi.getYourself()).stream().map(Role::getName).collect(Collectors.joining(", ")));
 
+        getOrCreateLimboChannel(server);
+
         if (!serverDataFile.exists()) {
             serverDataMap = new HashMap<>();
             saveData();
