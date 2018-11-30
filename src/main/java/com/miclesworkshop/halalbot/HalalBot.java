@@ -83,12 +83,6 @@ public class HalalBot {
         }
 
         getApprovalModeratorRole(server);
-
-        for (ServerTextChannel channel : server.getTextChannels()) {
-            if (channel.getName().startsWith("approval-")) {
-                channel.delete("Broke stuff, gotta fix");
-            }
-        }
     }
 
     public Role getApprovalModeratorRole(Server server) {
