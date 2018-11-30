@@ -61,7 +61,7 @@ public class Main {
     }
 
     private static void addOption(Options options, String opt, String description) {
-        Option option = new Option(opt, true, description);
+        Option option = new Option(opt, opt, true, description);
         option.setRequired(true);
         options.addOption(option);
     }
