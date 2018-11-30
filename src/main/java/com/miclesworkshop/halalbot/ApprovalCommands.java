@@ -205,11 +205,12 @@ public class ApprovalCommands {
 
                 ServerData serverData = bot.getServerData(server);
 
-                if (serverData.getRoles().remove(key) == null) {
+                if (!serverData.getRoles().containsKey(key)) {
                     channel.sendMessage("Role " + key + " not found! Use *listroles for a list.");
                     return;
                 }
 
+                serverData.getRoles().remove(key);
                 bot.saveData();
 
                 channel.sendMessage("Success! Unregistered role " + key + ".");
