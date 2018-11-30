@@ -33,6 +33,61 @@ public class ApprovalCommands {
 
 
         switch (split[0]) {
+            case "*approve": {
+                if (!checkModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                if (split.length != 2) {
+                    channel.sendMessage("Usage: *approve <role key>");
+                    return;
+                }
+
+                String key = split[1].toLowerCase();
+
+                ServerData serverData = bot.getServerData(server);
+
+                if (!serverData.getRoles().containsKey(key)) {
+                    channel.sendMessage("Role " + key + " not found! For a list of roles, see *listroles.");
+                    return;
+                }
+
+                Optional<Role> optionalRole = server.getRoleById(serverData.getRoles().get(key));
+
+                if (!optionalRole.isPresent()) {
+                    channel.sendMessage("Role " + key + " is no longer available. " +
+                            "To remove the role key use `*removerole " + key + "`." +
+                            "To change it use `*addrole key`.");
+                    return;
+                }
+
+                Role role = optionalRole.get();
+
+                bot.getDiscordApi().getUserById(channelName.replaceFirst("approval-", "")).thenAccept(approvedUser -> {
+                    // remove all old roles
+                    server.getRoles(approvedUser).forEach(oldRole -> server.removeRoleFromUser(approvedUser, oldRole));
+
+                    // add new role
+                    server.addRoleToUser(approvedUser, role);
+
+                    // deleted channel
+                    channel.delete(approvedUser.getName() + " was approved by " + approvedUser.getName() + ".");
+
+                    // inform the person who was approved
+                    approvedUser.sendMessage("You were approved in" + server.getName() + " as a " + role.getName() + "!");
+
+                    // inform the person who approved them
+                    user.sendMessage("Approved user " + approvedUser.getName() + " as a " + role.getName());
+
+                    log.info(user.getName() + " approved " + approvedUser.getName() + " as a " + role.getName());
+                });
+
+                break;
+            }
             case "*ban": {
                 if (!checkModerator(server, channel, user)) {
                     return;
@@ -50,23 +105,21 @@ public class ApprovalCommands {
                 String reason = content.substring(5);
 
                 bot.getDiscordApi().getUserById(channelName.replaceFirst("approval-", "")).thenAccept(bannedUser -> {
-                    server.banUser(bannedUser);
-                    channel.delete("User was denied & banned by " + bannedUser.getName() + ". Reason: " + reason);
+                    // remove the channel
+                    channel.delete(bannedUser.getName() + " was denied & banned by " + bannedUser.getName() + ". " +
+                            "Reason: " + reason);
+
+                    // inform the banned user
                     bannedUser.sendMessage("You were banned from " + server.getName() + ". Reason: " + reason);
+
+                    // ban user from the server (do it after sending the private message in case it's necessary)
+                    server.banUser(bannedUser);
+
+                    // inform the one who banned them
                     user.sendMessage("Banned user " + bannedUser.getName() + " & deleted their channel.");
+
+                    log.info(user.getName() + " banned " + bannedUser.getName() + " for " + reason);
                 });
-
-                return;
-            }
-            case "*approve": {
-                if (!checkModerator(server, channel, user)) {
-                    return;
-                }
-
-                if (!ensureApprovalChannel(channel)) {
-                    return;
-                }
-
 
                 return;
             }
@@ -82,8 +135,9 @@ public class ApprovalCommands {
                         .map(p -> p.getKey() + ": " + p.getValue())
                         .collect(Collectors.joining("\n"));
 
-                channel.sendMessage("**Current Roles (Role Name to Role ID)**\n" + rolesString);
-                return;
+                channel.sendMessage("**Current Roles (Role Name to Role ID) (Use *addrole to add roles)**\n" + rolesString);
+
+                break;
             }
             case "*addrole": {
                 if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
@@ -113,7 +167,9 @@ public class ApprovalCommands {
 
                 channel.sendMessage("Success! Made role " + role.getName() + " mapped to " + key + ".\n" +
                         "You can now do `*approve " + key + "` to approve someone into this role.");
-                return;
+
+                log.info(user.getName() + " registered role " + role.getName() + " as " + key);
+                break;
             }
             case "*removerole": {
                 if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
@@ -137,7 +193,9 @@ public class ApprovalCommands {
                 bot.saveData();
 
                 channel.sendMessage("Success! Unregistered role " + key + ".");
-                return;
+
+                log.info(user.getName() + " removed role with key " + key);
+                break;
             }
         }
     }
