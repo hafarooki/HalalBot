@@ -8,10 +8,12 @@ import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.permission.Permissions;
 import org.javacord.api.entity.permission.PermissionsBuilder;
+import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public class HalalBot {
     private DiscordApi discordApi;
@@ -32,8 +34,8 @@ public class HalalBot {
         getApprovalCategory(server);
     }
 
-    private void getApprovalModeratorRole(Server server) {
-        server.getRolesByName("Approval Moderator").stream().findFirst().orElseGet(() -> {
+    private Role getApprovalModeratorRole(Server server) {
+        return server.getRolesByName("Approval Moderator").stream().findFirst().orElseGet(() -> {
             try {
                 return server.createRoleBuilder()
                         .setName("Approval Moderator")
@@ -72,6 +74,20 @@ public class HalalBot {
 
         discordApi.addServerMemberJoinListener(event -> {
             ServerTextChannel channel = createApprovalChannel(event.getServer(), event.getUser());
+
+            try {
+                channel.createUpdater()
+                        .addPermissionOverwrite(event.getServer().getEveryoneRole(), new PermissionsBuilder()
+                                .setDenied(PermissionType.READ_MESSAGES).build())
+                        .addPermissionOverwrite(getApprovalModeratorRole(event.getServer()), new PermissionsBuilder()
+                                .setAllowed(PermissionType.READ_MESSAGES).build())
+                        .addPermissionOverwrite(event.getUser(), new PermissionsBuilder()
+                                .setAllowed(PermissionType.READ_MESSAGES).build())
+                        .update().get();
+            } catch (Exception exception) {
+                throw new RuntimeException(exception);
+            }
+
             channel.sendMessage(event.getUser().getMentionTag() + " welcome to the " + event.getServer().getName() + " Discord server!\n\n" +
                     "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
                     "Please answer the following questions:\n" +
