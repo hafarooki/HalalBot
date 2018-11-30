@@ -3,6 +3,7 @@ package com.miclesworkshop.halalbot;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ChannelCategory;
@@ -50,7 +51,7 @@ public class HalalBot {
         printInvite();
     }
 
-    public void saveData() {
+    public synchronized void saveData() {
         try (FileWriter writer = new FileWriter(serverDataFile)) {
             new Gson().toJson(serverDataMap, writer);
         } catch (IOException e) {
@@ -120,38 +121,12 @@ public class HalalBot {
 
             log.info(user.getName() + " joined " + server.getName() + " ! Creating channel");
 
-            ServerTextChannel channel = createApprovalChannel(server, user);
-
-            try {
-                channel.createUpdater()
-                        .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
-                                .setDenied(PermissionType.READ_MESSAGES).build())
-                        .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
-                                .setAllowed(PermissionType.READ_MESSAGES).build())
-                        .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
-                                .setAllowed(PermissionType.READ_MESSAGES).build())
-                        .addPermissionOverwrite(user, new PermissionsBuilder()
-                                .setAllowed(PermissionType.READ_MESSAGES).build())
-                        .update().get();
-            } catch (Exception exception) {
-                throw new RuntimeException(exception);
-            }
-
             // add the approval role to the user if they just joined
             server.getRolesByNameIgnoreCase("Approval").stream().findFirst().ifPresent(role ->
                     server.addRoleToUser(user, role)
             );
 
-            channel.sendMessage(user.getMentionTag() + " welcome to the " + server.getName() + " Discord server! " +
-                    "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
-                    "Please answer the following questions:\n" +
-                    String.join("\n",
-                            "**1)** What is your faith/religion? (You don't have to be a Muslim to join!)",
-                            "**2)** What is your gender (male/female) (please specify your *biological, birth gender*)",
-                            "**3)** Where did you hear of this server? " +
-                                    "__(please be detailed - if it's a 'friend', name them, and if it through 'Google', provide the exact link)__",
-                            "**4)** What do you want to do in this server?"
-                    ));
+            createApprovalChannelIfAbsent(server, user);
         });
 
         discordApi.addServerMemberLeaveListener(event -> {
@@ -183,6 +158,80 @@ public class HalalBot {
         });
     }
 
+    public void createApprovalChannelIfAbsent(Server server, User user) {
+        Optional<ServerTextChannel> channel = getApprovalChannel(server, user);
+
+        if (channel.isPresent()) {
+            channel.get().sendMessage(user.getMentionTag() + " this channel already exists!");
+            return;
+        }
+
+        channel = createApprovalChannel(server, user);
+
+        if (!channel.isPresent()) {
+            getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " there were too many approval " +
+                    "tickets to process your request! Please ask an approval moderator to clear some old ones.");
+            return;
+        }
+
+        channel.get().sendMessage(user.getMentionTag() + " welcome to the " + server.getName() + " Discord server! " +
+                "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
+                "Please answer the following questions:\n" +
+                String.join("\n",
+                        "**1)** What is your faith/religion? (You don't have to be a Muslim to join!)",
+                        "**2)** What is your gender (male/female) (please specify your *biological, birth gender*)",
+                        "**3)** Where did you hear of this server? " +
+                                "__(please be detailed - " +
+                                "if you heard it from a friend, give their name, " +
+                                "and if it is through searching on the Internet, give the link to where you found it)__",
+                        "**4)** What do you want to do in this server?"
+                ));
+    }
+
+    public void closeApprovalChannel(ServerTextChannel channel, @Nullable User closer) {
+        String channelName = channel.getName();
+        Preconditions.checkArgument(channelName.startsWith("approval-"));
+
+        String whoDoneIt = closer == null ? " automatically" : " by " + closer.getName();
+
+        discordApi.getUserById(channelName.replaceFirst("approval-", ""))
+                .thenAccept(user -> getOrCreateLimboChannel(channel.getServer())
+                        .sendMessage("Your approval ticket has been closed in " + channel.getServer().getName()
+                                + whoDoneIt + " for inactivity or some other reason. " +
+                                "Please use `*apply` in this limbo channel to apply again.")
+                );
+
+        channel.delete("Approval channel closed " + whoDoneIt);
+    }
+
+    public Optional<ServerTextChannel> getLimboChannel(Server server) {
+        ServerData serverData = getServerData(server);
+        long limboChannelId = serverData.getLimboChannel();
+
+        if (limboChannelId == 0) {
+            return Optional.empty();
+        }
+
+        return server.getTextChannelById(limboChannelId);
+    }
+
+    public ServerTextChannel getOrCreateLimboChannel(Server server) {
+        return getLimboChannel(server).orElseGet(() -> server.getTextChannelsByNameIgnoreCase("approval").stream()
+                .findFirst().orElseGet(() -> {
+                    try {
+                        ServerTextChannel channel = server.createTextChannelBuilder()
+                                .setName("approval")
+                                .create().get();
+                        getServerData(server).setLimboChannel(channel.getId());
+                        saveData();
+                        return channel;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+        );
+    }
+
     private String getApprovalChannelName(User user) {
         return "approval-" + user.getIdAsString();
     }
@@ -197,7 +246,7 @@ public class HalalBot {
                 .findFirst();
     }
 
-    private ServerTextChannel createApprovalChannel(Server server, User user) {
+    private Optional<ServerTextChannel> createApprovalChannel(Server server, User user) {
         String channelName = getApprovalChannelName(user);
 
         Preconditions.checkState(server.getChannelsByName(channelName).isEmpty());
@@ -214,18 +263,26 @@ public class HalalBot {
             }
         });
 
+        if (category.getChannels().size() > 45) {
+            return Optional.empty();
+        }
+
         try {
-            return server.createTextChannelBuilder()
+            return Optional.of(server.createTextChannelBuilder()
                     .setName(channelName)
                     .setCategory(category)
-                    .create().get();
+                    .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
+                            .setDenied(PermissionType.READ_MESSAGES).build())
+                    .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
+                            .setAllowed(PermissionType.READ_MESSAGES).build())
+                    .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
+                            .setAllowed(PermissionType.READ_MESSAGES).build())
+                    .addPermissionOverwrite(user, new PermissionsBuilder()
+                            .setAllowed(PermissionType.READ_MESSAGES).build())
+                    .create().get());
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
-    }
-
-    private ServerTextChannel getOrCreateApprovalChannel(Server server, User user) {
-        return getApprovalChannel(server, user).orElseGet(() -> this.createApprovalChannel(server, user));
     }
 
     public DiscordApi getDiscordApi() {

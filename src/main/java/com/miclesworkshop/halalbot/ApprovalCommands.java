@@ -123,6 +123,34 @@ public class ApprovalCommands {
 
                 return;
             }
+            case "*apply": {
+                Optional<ServerTextChannel> limboChannelOptional = bot.getLimboChannel(server);
+
+                if (!limboChannelOptional.isPresent()) {
+                    channel.sendMessage("No limbo channel found!");
+                    return;
+                }
+
+                ServerTextChannel limboChannel = limboChannelOptional.get();
+
+                if (channel.getId() != limboChannel.getId()) {
+                    channel.sendMessage("This can only be done in " + limboChannel.getMentionTag());
+                    return;
+                }
+
+                bot.createApprovalChannelIfAbsent(server, user);
+            }
+            case "*close": {
+                if (!checkModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                bot.closeApprovalChannel(channel, user);
+            }
             case "*addmod": {
                 if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
                     return;
