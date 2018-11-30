@@ -183,7 +183,12 @@ public class HalalBot {
             }
         });
 
-        discordApi.addMessageCreateListener(event -> commands.parseMessage(event.getMessage()));
+        discordApi.addMessageCreateListener(event -> {
+            event.getServerTextChannel().ifPresent(channel -> event.getMessageAuthor().asUser().ifPresent(user ->
+                            commands.parseMessage(channel.getServer(), user, channel, event.getMessage())
+                    )
+            );
+        });
     }
 
     private String getApprovalChannelName(User user) {
