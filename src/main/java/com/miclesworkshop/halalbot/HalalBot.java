@@ -5,6 +5,7 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.ServerTextChannel;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.permission.Permissions;
 import org.javacord.api.entity.permission.PermissionsBuilder;
@@ -116,6 +117,14 @@ public class HalalBot {
             event.getServer()
                     .getChannelsByName(getApprovalChannelName(event.getUser()))
                     .forEach(category -> category.delete("User left the server"));
+        });
+
+        discordApi.addMessageCreateListener(event -> {
+            Message message = event.getMessage();
+            if (message.getMentionedUsers().contains(discordApi.getYourself())) {
+                message.getChannel().sendMessage("السلام عليكم!\n" +
+                        "I am the Halal Bot! I am a special bot for Muslim.Chat who helps moderators manage new users who need approval.");
+            }
         });
     }
 
