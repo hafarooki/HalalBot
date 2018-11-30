@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class HalalBot {
     private DiscordApi discordApi;
     private Logger log = Logger.getLogger(getClass().getName());
-    private Commands commands;
+    private ApprovalCommands approvalCommands;
 
     private Map<Long, ServerData> serverDataMap = new HashMap<>();
 
@@ -40,7 +40,7 @@ public class HalalBot {
 
         serverDataFile = new File("server_data.json");
 
-        commands = new Commands(this);
+        approvalCommands = new ApprovalCommands(this);
 
         registerListeners();
 
@@ -86,7 +86,7 @@ public class HalalBot {
         getApprovalCategory(server);
     }
 
-    private Role getApprovalModeratorRole(Server server) {
+    public Role getApprovalModeratorRole(Server server) {
         return server.getRolesByName("Approval Moderator").stream().findFirst().orElseGet(() -> {
             try {
                 return server.createRoleBuilder()
@@ -101,7 +101,7 @@ public class HalalBot {
         });
     }
 
-    private ChannelCategory getApprovalCategory(Server server) {
+    public ChannelCategory getApprovalCategory(Server server) {
         String approvalCategoryName = "Approval";
         return server.getChannelCategoriesByName(approvalCategoryName).stream().findFirst().orElseGet(() -> {
             try {
@@ -185,7 +185,7 @@ public class HalalBot {
 
         discordApi.addMessageCreateListener(event -> {
             event.getServerTextChannel().ifPresent(channel -> event.getMessageAuthor().asUser().ifPresent(user ->
-                            commands.parseMessage(channel.getServer(), user, channel, event.getMessage())
+                            approvalCommands.parseMessage(channel.getServer(), user, channel, event.getMessage())
                     )
             );
         });
