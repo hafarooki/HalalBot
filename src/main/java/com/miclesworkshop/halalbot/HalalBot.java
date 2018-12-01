@@ -10,6 +10,7 @@ import org.javacord.api.entity.channel.ChannelCategory;
 import org.javacord.api.entity.channel.ServerChannel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.permission.Permissions;
 import org.javacord.api.entity.permission.PermissionsBuilder;
@@ -22,7 +23,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -188,6 +193,19 @@ class HalalBot {
             return;
         }
 
+
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+                .withLocale(Locale.US)
+                .withZone(ZoneId.systemDefault());
+
+        embedBuilder.addInlineField("Joined Discord", timeFormatter.format(user.getCreationTimestamp()));
+
+        server.getJoinedAtTimestamp(user).ifPresent(instant ->
+                embedBuilder.addInlineField("Joined Server", timeFormatter.format(instant))
+        );
+
         channel.get().sendMessage(user.getMentionTag() + " welcome to the " + server.getName() + " Discord server! " +
                 "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
                 "Please answer the following questions:\n" +
@@ -199,8 +217,7 @@ class HalalBot {
                                 "if you heard it from a friend, give their name, " +
                                 "and if it is through searching on the Internet, give the link to where you found it)__",
                         "**4)** What do you want to do in this server?"
-                )
-        );
+                ), embedBuilder);
     }
 
     void closeApprovalChannel(ServerTextChannel channel, String reason, @Nullable User closer) {
