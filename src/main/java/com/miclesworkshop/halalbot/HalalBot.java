@@ -262,7 +262,7 @@ class HalalBot {
     }
 
     private Optional<ServerTextChannel> getLogsChannel(Server server) {
-        long logsChannelId = getServerData(server).getLimboChannel();
+        long logsChannelId = getServerData(server).getLogsChannel();
         return logsChannelId == 0 ? Optional.empty() : server.getTextChannelById(logsChannelId);
     }
 
