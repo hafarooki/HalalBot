@@ -267,7 +267,7 @@ class HalalBot {
     }
 
     ServerTextChannel getOrCreateLogsChannel(Server server) {
-        return getLimboChannel(server).orElseGet(() -> {
+        return getLogsChannel(server).orElseGet(() -> {
                     ServerTextChannel channel = server.getTextChannelsByNameIgnoreCase("approval-logs").stream().findFirst().orElseGet(() -> {
                         try {
                             log.info("Creating logs #approval-logs channel!");
