@@ -223,7 +223,7 @@ class HalalBot {
         String channelName = channel.getName();
         Preconditions.checkArgument(channelName.startsWith("approval-"));
 
-        String whoDoneIt = closer == null ? " automatically" : " by " + closer.getName();
+        String whoDoneIt = closer == null ? "automatically" : "by " + closer.getName();
 
         discordApi.getUserById(channelName.replaceFirst("approval-", ""))
                 .thenAccept(user -> getOrCreateLimboChannel(channel.getServer())
@@ -232,7 +232,7 @@ class HalalBot {
                                 "Please say `*apply` in this limbo channel to apply again.")
                 );
 
-        deleteChannel(channel, "Approval channel closed " + whoDoneIt + " for " + reason);
+        deleteChannel(channel, "Approval channel closed " + whoDoneIt + ". Reason: '" + reason + "'");
     }
 
     private Optional<ServerTextChannel> getLimboChannel(Server server) {
