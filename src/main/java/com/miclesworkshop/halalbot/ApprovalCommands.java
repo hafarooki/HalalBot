@@ -75,7 +75,7 @@ public class ApprovalCommands {
                     server.addRoleToUser(approvedUser, role);
 
                     // deleted channel
-                    channel.delete(approvedUser.getName() + " was approved by " + approvedUser.getName() + ".");
+                    bot.deleteChannel(channel, approvedUser.getName() + " was approved by " + approvedUser.getName() + ".");
 
                     // inform the person who was approved
                     approvedUser.sendMessage("You were approved in " + server.getName() + " as a " + role.getName() + "!");
@@ -106,7 +106,7 @@ public class ApprovalCommands {
 
                 bot.getDiscordApi().getUserById(channelName.replaceFirst("approval-", "")).thenAccept(bannedUser -> {
                     // remove the channel
-                    channel.delete(bannedUser.getName() + " was denied & banned by " + bannedUser.getName() + ". " +
+                    bot.deleteChannel(channel, bannedUser.getName() + " was denied & banned by " + bannedUser.getName() + ". " +
                             "Reason: " + reason);
 
                     // inform the banned user

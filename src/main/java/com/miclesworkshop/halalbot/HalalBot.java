@@ -7,7 +7,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.channel.ChannelCategory;
-import org.javacord.api.entity.channel.ServerChannel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -38,7 +37,7 @@ class HalalBot {
     private Logger log = Logger.getLogger(getClass().getName());
     private ApprovalCommands approvalCommands;
 
-    private Map<Long, ServerData> serverDataMap = new HashMap<>();
+    private Map<Long, ServerData> serverDataMap;
 
     private File serverDataFile;
 
@@ -157,9 +156,9 @@ class HalalBot {
 
             log.info(user.getName() + " left " + server.getName() + "! Deleting channel if exists");
 
-            for (ServerChannel channel : server.getChannelsByName(getApprovalChannelName(user))) {
+            for (ServerTextChannel channel : server.getTextChannelsByName(getApprovalChannelName(user))) {
                 log.info("Deleted channel " + channel.getName());
-                channel.delete("User left the server");
+                deleteChannel(channel, "User left the server");
             }
         });
 
@@ -233,18 +232,12 @@ class HalalBot {
                                 "Please say `*apply` in this limbo channel to apply again.")
                 );
 
-        channel.delete("Approval channel closed " + whoDoneIt + " for " + reason);
+        deleteChannel(channel, "Approval channel closed " + whoDoneIt + " for " + reason);
     }
 
     private Optional<ServerTextChannel> getLimboChannel(Server server) {
-        ServerData serverData = getServerData(server);
-        long limboChannelId = serverData.getLimboChannel();
-
-        if (limboChannelId == 0) {
-            return Optional.empty();
-        }
-
-        return server.getTextChannelById(limboChannelId);
+        long limboChannelId = getServerData(server).getLimboChannel();
+        return limboChannelId == 0 ? Optional.empty() : server.getTextChannelById(limboChannelId);
     }
 
     ServerTextChannel getOrCreateLimboChannel(Server server) {
@@ -261,6 +254,38 @@ class HalalBot {
                     });
 
                     getServerData(server).setLimboChannel(channel.getId());
+                    saveData();
+
+                    return channel;
+                }
+        );
+    }
+
+    private Optional<ServerTextChannel> getLogsChannel(Server server) {
+        long logsChannelId = getServerData(server).getLimboChannel();
+        return logsChannelId == 0 ? Optional.empty() : server.getTextChannelById(logsChannelId);
+    }
+
+    ServerTextChannel getOrCreateLogsChannel(Server server) {
+        return getLimboChannel(server).orElseGet(() -> {
+                    ServerTextChannel channel = server.getTextChannelsByNameIgnoreCase("approval-logs").stream().findFirst().orElseGet(() -> {
+                        try {
+                            log.info("Creating logs #approval-logs channel!");
+                            return server.createTextChannelBuilder()
+                                    .setName("approval-logs")
+                                    .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
+                                            .setDenied(PermissionType.READ_MESSAGES).build())
+                                    .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
+                                            .setAllowed(PermissionType.READ_MESSAGES).build())
+                                    .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
+                                            .setAllowed(PermissionType.READ_MESSAGES).build())
+                                    .create().get();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+                    getServerData(server).setLogsChannel(channel.getId());
                     saveData();
 
                     return channel;
@@ -334,5 +359,27 @@ class HalalBot {
             serverData.setRoles(new HashMap<>());
             return serverData;
         });
+    }
+
+    void deleteChannel(ServerTextChannel channel, String reason) {
+        try {
+            String log = channel.getMessagesAsStream()
+                    .map(m -> "[" + m.getCreationTimestamp().atZone(ZoneId.systemDefault()).toString() + "] " +
+                            m.getAuthor().getDisplayName() +
+                            " (" + m.getAuthor().getDiscriminatedName() + ")" + ": " +
+                            m.getReadableContent() +
+                            (m.getLastEditTimestamp().isPresent() ? "(edited)" : ""))
+                    .collect(Collectors.joining("\n"));
+
+            getOrCreateLogsChannel(channel.getServer()).sendMessage(
+                    "Logs from approval channel " + channel.getName() + " (Deletion reason: `" + reason + "`)\n" +
+                            "```Log\n" +
+                            log + "" +
+                            "\n```");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        channel.delete(reason);
     }
 }
