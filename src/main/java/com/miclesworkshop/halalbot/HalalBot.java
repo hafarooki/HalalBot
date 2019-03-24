@@ -210,11 +210,9 @@ class HalalBot {
                 "Please answer the following questions:\n" +
                 String.join("\n",
                         "**1)** What is your faith/religion? (You don't have to be a Muslim to join!)",
-                        "**2)** What is your gender (male/female) (please specify your *biological, birth gender*)",
+                        "**2)** What is your gender (Male/Female) (Please specify your *biological, birth gender*)",
                         "**3)** Where did you hear of this server? " +
-                                "__(please be detailed - " +
-                                "if you heard it from a friend, give their name, " +
-                                "and if it is through searching on the Internet, give the link to where you found it)__",
+                                "__(Please be detailed - if you heard it from a friend, give their name)__",
                         "**4)** What do you want to do in this server?"
                 ), embedBuilder);
     }
