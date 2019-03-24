@@ -171,11 +171,9 @@ class HalalBot {
         });
 
         discordApi.addMessageCreateListener(event -> event
-                .getServerTextChannel().ifPresent(channel -> event
-                        .getMessageAuthor().asUser()
-                        .ifPresent(user -> approvalCommands.parseMessage(channel.getServer(), user, channel, event.getMessage()))
-                )
-        );
+                .getServerTextChannel().ifPresent(channel ->
+                        event.getMessageAuthor().asUser().ifPresent(user ->
+                                approvalCommands.parseMessage(channel.getServer(), user, channel, event.getMessage()))));
     }
 
     void createApprovalChannelIfAbsent(Server server, User user) {
