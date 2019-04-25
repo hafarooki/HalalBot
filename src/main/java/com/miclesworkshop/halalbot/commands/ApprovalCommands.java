@@ -1,5 +1,7 @@
-package com.miclesworkshop.halalbot;
+package com.miclesworkshop.halalbot.commands;
 
+import com.miclesworkshop.halalbot.HalalBot;
+import com.miclesworkshop.halalbot.ServerData;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
@@ -14,27 +16,19 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class ApprovalCommands {
+public class ApprovalCommands extends AbstractCommands {
     private Logger log = Logger.getLogger(getClass().getName());
 
-    private HalalBot bot;
-
     public ApprovalCommands(HalalBot halalBot) {
-        this.bot = halalBot;
+        super(halalBot);
     }
 
-    public void parseMessage(Server server, User user, ServerTextChannel channel, Message message) {
-        String content = message.getContent();
-        if (!content.startsWith("*")) return;
-
-        String[] split = content.split(" ");
-
-        String channelName = channel.getName();
-
-
-        switch (split[0]) {
+    @Override
+    protected void executeCommand(Server server, User user, ServerTextChannel channel, Message message,
+                                  String channelName, String cmd, String[] args) {
+        switch (cmd) {
             case "*approve": {
-                if (!checkModerator(server, channel, user)) {
+                if (isNotModerator(server, channel, user)) {
                     return;
                 }
 
@@ -42,12 +36,12 @@ public class ApprovalCommands {
                     return;
                 }
 
-                if (split.length != 2) {
+                if (args.length != 1) {
                     channel.sendMessage("Usage: *approve <role key>");
                     return;
                 }
 
-                String key = split[1].toLowerCase();
+                String key = args[0].toLowerCase();
 
                 ServerData serverData = bot.getServerData(server);
 
@@ -89,7 +83,7 @@ public class ApprovalCommands {
                 break;
             }
             case "*ban": {
-                if (!checkModerator(server, channel, user)) {
+                if (isNotModerator(server, channel, user)) {
                     return;
                 }
 
@@ -97,12 +91,12 @@ public class ApprovalCommands {
                     return;
                 }
 
-                if (split.length == 1) {
+                if (args.length == 0) {
                     channel.sendMessage("Reason required! Usage: `*ban <reason>`");
                     return;
                 }
 
-                String reason = content.substring(5);
+                String reason = String.join(" ", args);
 
                 bot.getDiscordApi().getUserById(channelName.replaceFirst("approval-", "")).thenAccept(bannedUser -> {
                     // remove the channel
@@ -135,7 +129,7 @@ public class ApprovalCommands {
                 break;
             }
             case "*close": {
-                if (!checkModerator(server, channel, user)) {
+                if (isNotModerator(server, channel, user)) {
                     return;
                 }
 
@@ -143,72 +137,58 @@ public class ApprovalCommands {
                     return;
                 }
 
-                if (split.length == 1) {
+                if (args.length == 0) {
                     channel.sendMessage("Reason required! Usage: `*close <reason>`");
                     return;
                 }
 
-                String reason = content.substring(7);
+                String reason = String.join(" ", args);
 
                 bot.closeApprovalChannel(channel, reason, user);
                 break;
             }
-            case "*addmod": {
-                if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
-                    return;
-                }
-
-                if (message.getMentionedUsers().isEmpty()) {
-                    channel.sendMessage("You must mention the users you want to add as mods!");
-                    return;
-                }
-
-                Role approvalModeratorRole = bot.getApprovalModeratorRole(server);
-
-                for (User newMod : message.getMentionedUsers()) {
-                    if (server.getRoles(newMod).contains(approvalModeratorRole)) {
-                        channel.sendMessage(newMod.getName() + " is already an approval moderator!");
-                        continue;
-                    }
-
-                    server.addRoleToUser(newMod, approvalModeratorRole);
-                    newMod.sendMessage("You've been made an approval moderator by " + user.getName() + " in " + server.getName() + "!");
-                    channel.sendMessage("Made " + newMod.getName() + " an approval moderator.");
-
-                    log.info(user.getName() + " made " + newMod.getName() + " an approval moderator in " + server.getName());
-                }
-
-                break;
-            }
+            case "*addmod":
             case "*removemod": {
-                if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
+                if (missingRolePermission(server, user, channel)) {
                     return;
                 }
 
-                if (message.getMentionedUsers().isEmpty()) {
-                    channel.sendMessage("You must mention the users you want to add as mods!");
+                if (missingMentionedUser(channel, message)) {
                     return;
                 }
 
                 Role approvalModeratorRole = bot.getApprovalModeratorRole(server);
 
                 for (User newMod : message.getMentionedUsers()) {
-                    if (!server.getRoles(newMod).contains(approvalModeratorRole)) {
-                        channel.sendMessage(newMod.getName() + " isn't an approval moderator!");
-                        continue;
+                    if (cmd.equals("*addmod")) {
+                        if (server.getRoles(newMod).contains(approvalModeratorRole)) {
+                            channel.sendMessage(newMod.getName() + " is already an approval moderator!");
+                            continue;
+                        }
+
+                        server.addRoleToUser(newMod, approvalModeratorRole);
+                        newMod.sendMessage("You've been made an approval moderator by " + user.getName() + " in " + server.getName() + "!");
+                        channel.sendMessage("Made " + newMod.getName() + " an approval moderator.");
+
+                        log.info(user.getName() + " made " + newMod.getName() + " an approval moderator in " + server.getName());
+                    } else {
+                        if (!server.getRoles(newMod).contains(approvalModeratorRole)) {
+                            channel.sendMessage(newMod.getName() + " isn't an approval moderator!");
+                            continue;
+                        }
+
+                        server.removeRoleFromUser(newMod, approvalModeratorRole);
+                        newMod.sendMessage("You've been removed as an approval moderator by " + user.getName() + " in " + server.getName() + "!");
+                        channel.sendMessage("Made " + newMod.getName() + " not approval moderator.");
+
+                        log.info(user.getName() + " made " + newMod.getName() + " no longer an approval moderator in " + server.getName());
                     }
-
-                    server.removeRoleFromUser(newMod, approvalModeratorRole);
-                    newMod.sendMessage("You've been removed as an approval moderator by " + user.getName() + " in " + server.getName() + "!");
-                    channel.sendMessage("Made " + newMod.getName() + " not approval moderator.");
-
-                    log.info(user.getName() + " made " + newMod.getName() + " no longer an approval moderator in " + server.getName());
                 }
 
                 break;
             }
             case "*listroles": {
-                if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
+                if (missingRolePermission(server, user, channel)) {
                     return;
                 }
 
@@ -224,18 +204,26 @@ public class ApprovalCommands {
                 break;
             }
             case "*addrole": {
-                if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
+                if (missingRolePermission(server, user, channel)) {
                     return;
                 }
 
-                if (split.length < 3) {
+                if (args.length < 2) {
                     channel.sendMessage("Usage: *addrole <key> <actual role name>");
                     return;
                 }
 
-                String key = split[1].toLowerCase();
+                String key = args[0].toLowerCase();
 
-                String roleName = content.substring(("*addrole " + key + " ").length());
+                String roleName = "";
+
+                for (int i = 1; i < args.length; i++) {
+                    roleName += args[i];
+                    if (i != args.length - 1) {
+                        roleName += " ";
+                    }
+                }
+
                 Optional<Role> optionalRole = server.getRolesByNameIgnoreCase(roleName).stream().findFirst();
 
                 if (!optionalRole.isPresent()) {
@@ -256,16 +244,16 @@ public class ApprovalCommands {
                 break;
             }
             case "*removerole": {
-                if (!checkPermission(server, channel, user, PermissionType.MANAGE_ROLES)) {
+                if (missingRolePermission(server, user, channel)) {
                     return;
                 }
 
-                if (split.length != 2) {
+                if (args.length != 1) {
                     channel.sendMessage("Usage: *removerole <key>");
                     return;
                 }
 
-                String key = split[1].toLowerCase();
+                String key = args[0].toLowerCase();
 
                 ServerData serverData = bot.getServerData(server);
 
@@ -285,17 +273,29 @@ public class ApprovalCommands {
         }
     }
 
+    private boolean missingMentionedUser(ServerTextChannel channel, Message message) {
+        if (message.getMentionedUsers().isEmpty()) {
+            channel.sendMessage("You must mention the users you want to add as mods!");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean missingRolePermission(Server server, User user, ServerTextChannel channel) {
+        return !checkPermission(server, channel, user, PermissionType.MANAGE_ROLES);
+    }
+
     private boolean ensureApprovalChannel(ServerTextChannel channel) {
         return channel.getName().startsWith("approval-") && channel.getCategory().isPresent() && channel.getCategory().get().getName().startsWith("Approval");
     }
 
-    private boolean checkModerator(Server server, TextChannel channel, User user) {
+    private boolean isNotModerator(Server server, TextChannel channel, User user) {
         if (!server.getRoles(user).contains(bot.getApprovalModeratorRole(server))) {
             channel.sendMessage(user.getMentionTag() + " you aren't an approval moderator!");
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     private boolean checkPermission(Server server, TextChannel channel, User user, PermissionType... permissions) {

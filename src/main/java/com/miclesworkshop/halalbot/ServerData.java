@@ -5,7 +5,9 @@ import java.util.Map;
 public class ServerData {
     private Map<String, Long> roles;
     private long limboChannel;
+    private long jailChannel;
     private long logsChannel;
+    private long jailedRoleId;
 
     public Map<String, Long> getRoles() {
         return roles;
@@ -29,5 +31,21 @@ public class ServerData {
 
     public void setLogsChannel(long logsChannel) {
         this.logsChannel = logsChannel;
+    }
+
+    public long getJailChannel() {
+        return jailChannel;
+    }
+
+    public void setJailChannel(long jailChannel) {
+        this.jailChannel = jailChannel;
+    }
+
+    public long getJailedRoleId() {
+        return jailedRoleId;
+    }
+
+    public void setJailedRoleId(long jailedRoleId) {
+        this.jailedRoleId = jailedRoleId;
     }
 }
