@@ -270,7 +270,14 @@ public class HalalBot {
                     ServerTextChannel channel = server.getTextChannelsByNameIgnoreCase("jail").stream().findFirst().orElseGet(() -> {
                         log.info("Creating #jail channel!");
                         return getOrRuntimeException(server.createTextChannelBuilder().setName("jail")
-                                .addPermissionOverwrite(getJailedRole(server), new PermissionsBuilder().setAllowed(PermissionType.READ_MESSAGES).build())
+                                .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
+                                        .setDenied(PermissionType.READ_MESSAGES).build())
+                                .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
+                                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                                .addPermissionOverwrite(getJailedRole(server), new PermissionsBuilder()
+                                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                                .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
+                                        .setAllowed(PermissionType.READ_MESSAGES).build())
                                 .create());
                     });
 
