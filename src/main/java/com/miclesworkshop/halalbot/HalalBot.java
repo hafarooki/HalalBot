@@ -109,14 +109,13 @@ public class HalalBot {
     }
 
     public Role getApprovalModeratorRole(Server server) {
-        return server.getRolesByName("Approval Moderator").stream().findFirst().orElseGet(() -> {
-            return getOrRuntimeException(server.createRoleBuilder()
-                    .setName("Approval Moderator")
-                    .setAuditLogReason("Approval role was missing, created")
-                    .setDisplaySeparately(false)
-                    .setMentionable(true)
-                    .create());
-        });
+        return server.getRolesByName("Approval Moderator").stream().findFirst().orElseGet(() -> getOrRuntimeException(server
+                .createRoleBuilder()
+                .setName("Approval Moderator")
+                .setAuditLogReason("Approval role was missing, created")
+                .setDisplaySeparately(false)
+                .setMentionable(true)
+                .create()));
     }
 
     public Role getJailedRole(Server server) {
@@ -266,9 +265,7 @@ public class HalalBot {
                     ServerTextChannel channel = server.getTextChannelsByNameIgnoreCase("jail").stream().findFirst().orElseGet(() -> {
                         log.info("Creating #jail channel!");
                         return getOrRuntimeException(server.createTextChannelBuilder().setName("jail")
-                                .addPermissionOverwrite(getJailedRole(server), new PermissionsBuilder()
-                                        .setAllowed(PermissionType.READ_MESSAGES)
-                                        .build())
+                                .addPermissionOverwrite(getJailedRole(server), new PermissionsBuilder().setAllowed(PermissionType.READ_MESSAGES).build())
                                 .create());
                     });
 
