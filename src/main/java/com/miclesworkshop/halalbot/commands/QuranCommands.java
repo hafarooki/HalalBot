@@ -96,7 +96,9 @@ public class QuranCommands extends AbstractCommands {
             embedBuilder.addField(index, content);
         }
 
-        embedBuilder.addField("Translation", "Mufti Taqi Usmani");
+        if (!cmd.equals("*aquran")) {
+            embedBuilder.addField("Translation", "Mufti Taqi Usmani");
+        }
 
         channel.sendMessage(embedBuilder);
     }
