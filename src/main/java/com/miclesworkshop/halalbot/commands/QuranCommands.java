@@ -7,6 +7,8 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Arrays;
 
 public class QuranCommands extends AbstractCommands {
@@ -14,6 +16,13 @@ public class QuranCommands extends AbstractCommands {
 
     public QuranCommands(HalalBot bot) {
         super(bot);
+        try (ObjectInputStream ois = new ObjectInputStream(getClass().getResourceAsStream("halalbot_quran_data.bin"))) {
+            data = (String[][][]) ois.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
