@@ -16,11 +16,9 @@ public class QuranCommands extends AbstractCommands {
 
     public QuranCommands(HalalBot bot) {
         super(bot);
-        try (ObjectInputStream ois = new ObjectInputStream(getClass().getResourceAsStream("halalbot_quran_data.bin"))) {
+        try (ObjectInputStream ois = new ObjectInputStream(QuranCommands.class.getResourceAsStream("halalbot_quran_data.bin"))) {
             data = (String[][][]) ois.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
