@@ -75,7 +75,7 @@ public class QuranCommands extends AbstractCommands {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         for (int i = 0; i < range.length; i++) {
-            String index = surahNum + ":" + (i + 1);
+            String index = surahNum + ":" + (ayah1Num + i);
             StringBuilder contentBuilder = new StringBuilder();
 
             String[] ayahData = range[i];
