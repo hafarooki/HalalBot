@@ -93,10 +93,10 @@ public class QuranCommands extends AbstractCommands {
             }
             contentBuilder.append("\n\n");
             String content = contentBuilder.toString();
-            embedBuilder.addInlineField(index, content);
+            embedBuilder.addField(index, content);
         }
 
-        embedBuilder.addInlineField("Translation", "Mufti Taqi Usmani");
+        embedBuilder.addField("Translation", "Mufti Taqi Usmani");
 
         channel.sendMessage(embedBuilder);
     }
