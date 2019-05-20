@@ -72,6 +72,8 @@ public class QuranCommands extends AbstractCommands {
 
         String[][] range = Arrays.copyOfRange(surahData, ayah1Num - 1, ayah2Num - 1);
 
+        channel.sendMessage(range.length + " is the range");
+
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         for (int i = 0; i < range.length; i++) {
@@ -94,7 +96,6 @@ public class QuranCommands extends AbstractCommands {
             contentBuilder.append("\n\n");
             String content = contentBuilder.toString();
             embedBuilder.addInlineField(index, content);
-            channel.sendMessage(content);
         }
 
         embedBuilder.addInlineField("Translation", "Mufti Taqi Usmani");
