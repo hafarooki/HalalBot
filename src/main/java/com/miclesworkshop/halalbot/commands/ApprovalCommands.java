@@ -214,7 +214,6 @@ public class ApprovalCommands extends AbstractCommands {
                 }
 
                 String key = args[0].toLowerCase();
-        String[][] surahData = data[surahNum - 1];
 
                 String roleName = "";
 
