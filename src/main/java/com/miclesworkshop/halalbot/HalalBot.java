@@ -3,10 +3,7 @@ package com.miclesworkshop.halalbot;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.miclesworkshop.halalbot.commands.AbstractCommands;
-import com.miclesworkshop.halalbot.commands.ApprovalCommands;
-import com.miclesworkshop.halalbot.commands.HelpCommand;
-import com.miclesworkshop.halalbot.commands.JailCommands;
+import com.miclesworkshop.halalbot.commands.*;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
@@ -64,7 +61,11 @@ public class HalalBot {
             log.info("  -> Read " + serverDataMap.size() + " servers.");
         }
 
-        commandGroups = Arrays.asList(new HelpCommand(this), new ApprovalCommands(this), new JailCommands(this));
+        commandGroups = Arrays.asList(
+                new HelpCommand(this),
+                new ApprovalCommands(this),
+                new JailCommands(this),
+                new QuranCommands((this)));
 
         registerListeners();
 
@@ -208,7 +209,6 @@ public class HalalBot {
         if (!channel.isPresent()) {
             return;
         }
-
 
         EmbedBuilder embedBuilder = new EmbedBuilder();
 

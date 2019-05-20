@@ -29,7 +29,7 @@ public abstract class AbstractCommands {
             System.arraycopy(split, 1, args, 0, args.length);
         }
 
-        executeCommand(server, user, channel, message, channelName, split[0], args);
+        executeCommand(server, user, channel, message, channelName, split[0].toLowerCase(), args);
     }
 
     protected abstract void executeCommand(Server server, User user, ServerTextChannel channel, Message message,
