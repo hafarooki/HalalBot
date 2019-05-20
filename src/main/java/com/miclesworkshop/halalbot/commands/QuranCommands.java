@@ -34,9 +34,9 @@ public class QuranCommands extends AbstractCommands {
             return;
         }
 
-        int surahNum = 0;
-        int ayah1Num = 0;
-        int ayah2Num = 0;
+        int surahNum;
+        int ayah1Num;
+        int ayah2Num;
 
         try {
             surahNum = Integer.parseInt(args[0]);
@@ -70,9 +70,7 @@ public class QuranCommands extends AbstractCommands {
             return;
         }
 
-        String[][] range = Arrays.copyOfRange(surahData, ayah1Num - 1, ayah2Num - 1);
-
-        channel.sendMessage(range.length + " is the range");
+        String[][] range = Arrays.copyOfRange(surahData, ayah1Num - 1, ayah2Num);
 
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
