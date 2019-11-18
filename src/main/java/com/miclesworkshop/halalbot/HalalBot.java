@@ -230,7 +230,9 @@ public class HalalBot {
                         "**2)** What is your gender (Male/Female) (Please specify your *biological, birth gender*)",
                         "**3)** Where did you hear of this server? " +
                                 "__(Please be detailed - if you heard it from a friend, give their name)__",
-                        "**4)** What do you want to do in this server?"
+                        "**4)** What do you want to do in this server?",
+                        "**5)** Please type @Male Verification if you are male or @Female Verification if you are female " +
+                                "to ping a moderator who will be voice chatting with you for verification purposes"
                 ), embedBuilder);
     }
 
