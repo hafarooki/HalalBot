@@ -232,7 +232,8 @@ public class HalalBot {
                                 "__(Please be detailed - if you heard it from a friend, give their name)__",
                         "**4)** What do you want to do in this server?",
                         "Please type @Male Verification if you are male or @Female Verification if you are female " +
-                                "to ping a moderator who will be voice chatting with you for verification purposes"
+                                "to ping a moderator who will be voice chatting with you for verification purposes.",
+                        "If a mod doesn't respond, please wait patiently."
                 ), embedBuilder);
     }
 
