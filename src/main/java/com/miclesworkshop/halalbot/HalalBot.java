@@ -395,6 +395,7 @@ public class HalalBot {
             e.printStackTrace();
         }
 
+        channel.sendMessage("Deleting channel...");
         channel.delete(reason);
     }
 }
