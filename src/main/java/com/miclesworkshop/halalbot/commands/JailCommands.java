@@ -7,10 +7,15 @@ import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
+
 public class JailCommands extends AbstractCommands {
     public JailCommands(HalalBot bot) {
         super(bot);
     }
+
+    private Logger log = Logger.getLogger(getClass().getName());
 
     @Override
     protected void executeCommand(Server server, User user, ServerTextChannel channel, Message message,
@@ -45,14 +50,18 @@ public class JailCommands extends AbstractCommands {
                 continue;
             }
 
-            if (jail) {
-                target.addRole(bot.getJailedRole(server), "Jailed by " + user.getDiscriminatedName());
-                target.sendMessage("You have been jailed in " + server.getName() + "!");
-                channel.sendMessage("Jailed " + target.getDiscriminatedName());
-            } else {
-                target.removeRole(bot.getJailedRole(server), "Unjailed by " + user.getDiscriminatedName());
-                target.sendMessage("You have been unjailed in " + server.getName() + "!");
-                channel.sendMessage("Unjailed " + target.getDiscriminatedName());
+            try {
+                if (jail) {
+                    target.addRole(bot.getJailedRole(server), "Jailed by " + user.getDiscriminatedName()).get();
+                    target.sendMessage("You have been jailed in " + server.getName() + "!");
+                    channel.sendMessage("Jailed " + target.getDiscriminatedName());
+                } else {
+                    target.removeRole(bot.getJailedRole(server), "Unjailed by " + user.getDiscriminatedName()).get();
+                    target.sendMessage("You have been unjailed in " + server.getName() + "!");
+                    channel.sendMessage("Unjailed " + target.getDiscriminatedName());
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
         }
     }
