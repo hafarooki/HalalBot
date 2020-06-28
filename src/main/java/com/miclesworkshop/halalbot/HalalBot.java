@@ -36,7 +36,9 @@ public class HalalBot {
     private Logger log = Logger.getLogger(getClass().getName());
     private List<AbstractCommands> commandGroups;
 
+    private Gson gson;
     private Map<Long, ServerData> serverDataMap;
+    private Map<Long, TimedCounter> counters;
 
     private File serverDataFile;
 
@@ -45,6 +47,8 @@ public class HalalBot {
 
         serverDataFile = new File(dataFolder, "server_data.json");
 
+        counters = new HashMap<>();
+        gson = new Gson();
         if (!serverDataFile.exists()) {
             log.info("Creating new server data file...");
             serverDataMap = new HashMap<>();
@@ -54,7 +58,7 @@ public class HalalBot {
             try (FileReader reader = new FileReader(serverDataFile)) {
                 Type type = new TypeToken<Map<Long, ServerData>>() {
                 }.getType();
-                serverDataMap = new Gson().fromJson(reader, type);
+                serverDataMap = gson.fromJson(reader, type);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -84,7 +88,7 @@ public class HalalBot {
 
     public synchronized void saveData() {
         try (FileWriter writer = new FileWriter(serverDataFile)) {
-            new Gson().toJson(serverDataMap, writer);
+            gson.toJson(serverDataMap, writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -179,6 +183,15 @@ public class HalalBot {
             for (ServerTextChannel channel : server.getTextChannelsByName(getApprovalChannelName(user))) {
                 log.info("Deleted channel " + channel.getName());
                 deleteChannel(channel, "User left the server");
+            }
+        });
+
+        discordApi.addMessageCreateListener(event -> {
+            if (event.getMessageAuthor().isRegularUser()
+                    && !event.getMessageAuthor().isServerAdmin()) {
+                event.getServerTextChannel().ifPresent(channel ->
+                counters.computeIfAbsent(channel.getId(), id ->
+                    new TimedCounter(channel)).increment());
             }
         });
 
@@ -368,12 +381,8 @@ public class HalalBot {
     }
 
     public ServerData getServerData(Server server) {
-        return serverDataMap.computeIfAbsent(server.getId(), id -> {
-            ServerData serverData = new ServerData();
-            serverData.setLimboChannel(0);
-            serverData.setRoles(new HashMap<>());
-            return serverData;
-        });
+        return serverDataMap.computeIfAbsent(server.getId(),
+                id -> new ServerData());
     }
 
     public void deleteChannel(ServerTextChannel channel, String reason) {
