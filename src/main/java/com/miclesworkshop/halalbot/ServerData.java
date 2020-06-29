@@ -1,6 +1,7 @@
 package com.miclesworkshop.halalbot;
 
 import java.util.Map;
+import java.util.HashMap;
 
 public class ServerData {
     private Map<String, Long> roles;
@@ -8,6 +9,10 @@ public class ServerData {
     private long jailChannel;
     private long logsChannel;
     private long jailedRoleId;
+
+    public ServerData() {
+        setRoles(new HashMap<>());
+    }
 
     public Map<String, Long> getRoles() {
         return roles;
