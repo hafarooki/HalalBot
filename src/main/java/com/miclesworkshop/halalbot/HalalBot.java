@@ -241,7 +241,8 @@ public class HalalBot {
                         "**4)** What do you want to do in this server?",
                         "Please type @Male Verification if you are male or @Female Verification if you are female " +
                                 "to ping a moderator who will be voice chatting with you for verification purposes.",
-                        "If a mod doesn't respond, please wait patiently."
+                        "If a mod doesn't respond, please wait patiently.",
+                        "*(This channel may be recorded)*"
                 ), embedBuilder);
     }
 
