@@ -34,7 +34,6 @@ public abstract class AbstractCommands {
         }
 
         String cmd = split[0].toLowerCase();
-        log.info("Attempting to execute command " + cmd);
         executeCommand(server, user, channel, message, channelName, cmd, args);
     }
 
