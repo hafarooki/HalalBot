@@ -95,7 +95,7 @@ public class HalalBot {
     }
 
     private void initServer(Server server) {
-        log.info("Initializing " + server.getName() + " (" + server.getOwner().getName() + ")");
+        log.info("Initializing " + server.getName() + " (" + server.getOwner().map(User::getDiscriminatedName).orElse(null) + ")");
 
         if (!server.isMember(getOrRuntimeException(discordApi.getOwner()))) {
             server.leave();
@@ -190,8 +190,8 @@ public class HalalBot {
             if (event.getMessageAuthor().isRegularUser()
                     && !event.getMessageAuthor().isServerAdmin()) {
                 event.getServerTextChannel().ifPresent(channel ->
-                counters.computeIfAbsent(channel.getId(), id ->
-                    new TimedCounter(channel)).increment());
+                        counters.computeIfAbsent(channel.getId(), id ->
+                                new TimedCounter(channel)).increment());
             }
         });
 
