@@ -95,12 +95,7 @@ public class HalalBot {
     }
 
     private void initServer(Server server) {
-        log.info("Initializing " + server.getName() + " (" + server.getOwner().map(User::getDiscriminatedName).orElse(null) + ")");
-
-        if (!server.isMember(getOrRuntimeException(discordApi.getOwner()))) {
-            server.leave();
-            return;
-        }
+        log.info("Initializing " + server.getName());
 
         log.info("  -> Own Roles: " + server.getRoles(discordApi.getYourself()).stream().map(Role::getName).collect(Collectors.joining(", ")));
 

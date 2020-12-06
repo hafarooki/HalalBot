@@ -22,7 +22,7 @@ public class Main {
         try {
             line = parser.parse(options, args);
         } catch (ParseException exp) {
-            System.err.println("Parsing failed.  Reason: " + exp.getMessage());
+            exp.printStackTrace();
             System.exit(1);
             return;
         }
