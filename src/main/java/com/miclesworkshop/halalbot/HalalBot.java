@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.miclesworkshop.halalbot.commands.*;
+import com.sun.corba.se.impl.activation.ServerTableEntry;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
@@ -205,18 +206,54 @@ public class HalalBot {
     }
 
     public void createApprovalChannelIfAbsent(Server server, User user) {
-        Optional<ServerTextChannel> channel = getApprovalChannel(server, user);
+        Optional<ServerTextChannel> existingChannelOptional = getApprovalChannel(server, user);
 
-        if (channel.isPresent()) {
-            channel.get().sendMessage(user.getMentionTag() + " this channel already exists!");
+        if (existingChannelOptional.isPresent()) {
+            ServerTextChannel existingChannel = existingChannelOptional.get();
+
+            if (existingChannel.canSee(user)) {
+                existingChannel.sendMessage(user.getMentionTag() + " this channel already exists!");
+                return;
+            }
+
+            existingChannel.createUpdater()
+                    .addPermissionOverwrite(user, new PermissionsBuilder()
+                            .setAllowed(PermissionType.READ_MESSAGES).build())
+                    .update();
+
             return;
         }
 
-        channel = createApprovalChannel(server, user);
+        String channelName = getApprovalChannelName(user);
 
-        if (!channel.isPresent()) {
+        Preconditions.checkState(server.getChannelsByName(channelName).isEmpty());
+
+        String approvalCategoryName = "Approval";
+        ChannelCategory category = server.getChannelCategoriesByName(approvalCategoryName).stream()
+                .findFirst().orElseGet(() -> getOrRuntimeException(server
+                        .createChannelCategoryBuilder()
+                        .setAuditLogReason("Approval category missing, created it.")
+                        .setName(approvalCategoryName)
+                        .create()));
+
+        if (category.getChannels().size() > 45) {
+            getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " there were too many approval " +
+                    "tickets to process your request! Please ask an approval moderator to clear some old ones.");
             return;
         }
+
+        ServerTextChannel channel = getOrRuntimeException(server.createTextChannelBuilder()
+                .setName(channelName)
+                .setCategory(category)
+                .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
+                        .setDenied(PermissionType.READ_MESSAGES).build())
+                .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
+                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
+                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                .addPermissionOverwrite(user, new PermissionsBuilder()
+                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                .create());
 
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
@@ -230,7 +267,7 @@ public class HalalBot {
                 embedBuilder.addInlineField("Joined Server", timeFormatter.format(instant))
         );
 
-        channel.get().sendMessage(user.getMentionTag() + " welcome to the " + server.getName() + " Discord server! " +
+        channel.sendMessage(user.getMentionTag() + " welcome to the " + server.getName() + " Discord server! " +
                 "Since we get a lot of trolls and spammers, we require you to go through an approval process.\n\n" +
                 "Please answer the following questions:\n" +
                 String.join("\n",
@@ -337,39 +374,6 @@ public class HalalBot {
                 })
                 .filter(channel -> channel.getName().equals(getApprovalChannelName(user)))
                 .findFirst();
-    }
-
-    private Optional<ServerTextChannel> createApprovalChannel(Server server, User user) {
-        String channelName = getApprovalChannelName(user);
-
-        Preconditions.checkState(server.getChannelsByName(channelName).isEmpty());
-
-        String approvalCategoryName = "Approval";
-        ChannelCategory category = server.getChannelCategoriesByName(approvalCategoryName).stream()
-                .findFirst().orElseGet(() -> getOrRuntimeException(server
-                        .createChannelCategoryBuilder()
-                        .setAuditLogReason("Approval category missing, created it.")
-                        .setName(approvalCategoryName)
-                        .create()));
-
-        if (category.getChannels().size() > 45) {
-            getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " there were too many approval " +
-                    "tickets to process your request! Please ask an approval moderator to clear some old ones.");
-            return Optional.empty();
-        }
-
-        return Optional.of(getOrRuntimeException(server.createTextChannelBuilder()
-                .setName(channelName)
-                .setCategory(category)
-                .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
-                        .setDenied(PermissionType.READ_MESSAGES).build())
-                .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
-                        .setAllowed(PermissionType.READ_MESSAGES).build())
-                .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
-                        .setAllowed(PermissionType.READ_MESSAGES).build())
-                .addPermissionOverwrite(user, new PermissionsBuilder()
-                        .setAllowed(PermissionType.READ_MESSAGES).build())
-                .create()));
     }
 
     public DiscordApi getDiscordApi() {
