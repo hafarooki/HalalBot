@@ -6,8 +6,12 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
+import java.util.logging.Logger;
+
 public abstract class AbstractCommands {
-    HalalBot bot;
+    private Logger log = Logger.getLogger(AbstractCommands.class.getName());
+
+    protected HalalBot bot;
 
     AbstractCommands(HalalBot bot) {
         this.bot = bot;
@@ -29,7 +33,9 @@ public abstract class AbstractCommands {
             System.arraycopy(split, 1, args, 0, args.length);
         }
 
-        executeCommand(server, user, channel, message, channelName, split[0].toLowerCase(), args);
+        String cmd = split[0].toLowerCase();
+        log.info("Attempting to execute command " + cmd);
+        executeCommand(server, user, channel, message, channelName, cmd, args);
     }
 
     protected abstract void executeCommand(Server server, User user, ServerTextChannel channel, Message message,
