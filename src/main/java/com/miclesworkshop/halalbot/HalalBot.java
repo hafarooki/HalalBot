@@ -43,7 +43,10 @@ public class HalalBot {
     private File serverDataFile;
 
     public HalalBot(File dataFolder, String token) {
-        discordApi = new DiscordApiBuilder().setToken(token).login().join();
+        discordApi = new DiscordApiBuilder().setToken(token)
+                .setAllIntents()
+                .login()
+                .join();
 
         serverDataFile = new File(dataFolder, "server_data.json");
 
@@ -114,13 +117,19 @@ public class HalalBot {
     }
 
     public Role getApprovalModeratorRole(Server server) {
-        return server.getRolesByName("Approval Moderator").stream().findFirst().orElseGet(() -> getOrRuntimeException(server
+        List<Role> roles = server.getRolesByNameIgnoreCase("Approval Moderator");
+
+        if (!roles.isEmpty()) {
+            return roles.get(0);
+        }
+
+        return getOrRuntimeException(server
                 .createRoleBuilder()
                 .setName("Approval Moderator")
                 .setAuditLogReason("Approval role was missing, created")
                 .setDisplaySeparately(false)
                 .setMentionable(true)
-                .create()));
+                .create());
     }
 
     public Role getJailedRole(Server server) {
@@ -208,18 +217,19 @@ public class HalalBot {
         Optional<ServerTextChannel> existingChannelOptional = getApprovalChannel(server, user);
 
         if (existingChannelOptional.isPresent()) {
-            ServerTextChannel existingChannel = existingChannelOptional.get();
+            ServerTextChannel channel = existingChannelOptional.get();
 
-            if (existingChannel.canSee(user)) {
-                existingChannel.sendMessage(user.getMentionTag() + " this channel already exists!");
+            if (channel.canSee(user)) {
+                channel.sendMessage(user.getMentionTag() + " this channel already exists!");
                 return;
             }
 
-            existingChannel.createUpdater()
+            channel.createUpdater()
                     .addPermissionOverwrite(user, new PermissionsBuilder()
                             .setAllowed(PermissionType.READ_MESSAGES).build())
                     .update();
 
+            notifyOfApprovalChannel(server, user, channel);
             return;
         }
 
@@ -254,6 +264,10 @@ public class HalalBot {
                         .setAllowed(PermissionType.READ_MESSAGES).build())
                 .create());
 
+        notifyOfApprovalChannel(server, user, channel);
+    }
+
+    private void notifyOfApprovalChannel(Server server, User user, ServerTextChannel channel) {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)

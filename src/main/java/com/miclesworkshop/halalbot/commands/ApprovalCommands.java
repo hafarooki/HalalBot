@@ -11,6 +11,7 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -290,7 +291,11 @@ public class ApprovalCommands extends AbstractCommands {
     }
 
     private boolean isNotModerator(Server server, TextChannel channel, User user) {
-        if (!server.getRoles(user).contains(bot.getApprovalModeratorRole(server))) {
+        Role approvalModeratorRole = bot.getApprovalModeratorRole(server);
+
+        List<Role> roles = user.getRoles(server);
+
+        if (!roles.contains(approvalModeratorRole)) {
             channel.sendMessage(user.getMentionTag() + " you aren't an approval moderator!");
             return true;
         }
