@@ -7,7 +7,9 @@ import com.miclesworkshop.halalbot.commands.*;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.DiscordEntity;
 import org.javacord.api.entity.channel.ChannelCategory;
+import org.javacord.api.entity.channel.ServerChannel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -245,10 +247,28 @@ public class HalalBot {
                         .setName(approvalCategoryName)
                         .create()));
 
-        if (category.getChannels().size() > 45) {
-            getOrCreateLimboChannel(server).sendMessage(user.getMentionTag() + " there were too many approval " +
-                    "tickets to process your request! Please ask an approval moderator to clear some old ones.");
-            return;
+        if (category.getChannels().size() == 50) {
+            Optional<ServerChannel> serverChannel =
+                category.getChannels().stream()
+                .filter(channel -> channel.getName().startsWith("approval-"))
+                .sorted(Comparator.comparing(
+                            DiscordEntity::getCreationTimestamp))
+                .findFirst();
+
+            Optional<ServerTextChannel> textChannel;
+
+            if (serverChannel.isPresent()
+                    && (textChannel = serverChannel.get().asServerTextChannel())
+                    .isPresent()) {
+                closeApprovalChannel(textChannel.get(),
+                        "The category is full", null);
+            } else {
+                getOrCreateLimboChannel(server).sendMessage(user.getMentionTag()
+                        + " there were too many approval tickets to process"
+                        + " your request! Please ask an approval moderator to"
+                        + " clear some old ones.");
+                return;
+            }
         }
 
         ServerTextChannel channel = getOrRuntimeException(server.createTextChannelBuilder()
