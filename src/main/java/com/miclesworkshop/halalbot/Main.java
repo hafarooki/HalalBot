@@ -1,35 +1,50 @@
 package com.miclesworkshop.halalbot;
 
+import com.google.gson.Gson;
 import org.apache.commons.cli.*;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.StandardOpenOption;
 
 public class Main {
-    public static void main(String[] args) {
-        Options options = new Options();
+    public static void main(String[] args) throws IOException {
+        String token;
+        String dataFolderPath;
 
-        addOption(options, "datafolder", "Data Folder");
-        addOption(options, "token", "Discord API Token");
+        File configFile = new File("halalbot.json");
+        if (configFile.exists()) {
+            try (FileReader reader = new FileReader(configFile)) {
+                Config config = new Gson().fromJson(reader, Config.class);
+                token = config.token;
+                dataFolderPath = config.dataFolder;
+            }
+        } else {
+            Options options = new Options();
 
-        CommandLineParser parser = new DefaultParser();
+            addOption(options, "datafolder", "Data Folder");
+            addOption(options, "token", "Discord API Token");
 
-        CommandLine line;
+            CommandLineParser parser = new DefaultParser();
 
-        try {
-            line = parser.parse(options, args);
-        } catch (ParseException exp) {
-            exp.printStackTrace();
-            System.exit(1);
-            return;
+            CommandLine line;
+
+            try {
+                line = parser.parse(options, args);
+            } catch (ParseException exp) {
+                exp.printStackTrace();
+                System.exit(1);
+                return;
+            }
+
+            token = line.getOptionValue("token");
+            dataFolderPath = line.getOptionValue("datafolder");
         }
 
-        String token = line.getOptionValue("token");
-
-        File dataFolder = new File(line.getOptionValue("datafolder"));
+        File dataFolder = new File(dataFolderPath);
 
         if (dataFolder.mkdirs()) {
             System.out.println("Created data folder " + dataFolder.getPath());
