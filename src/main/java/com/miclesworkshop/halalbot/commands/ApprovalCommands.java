@@ -83,6 +83,26 @@ public class ApprovalCommands extends AbstractCommands {
 
                 break;
             }
+            case "*vc": {
+                if (isNotModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                message.delete();
+
+                String id = channelName.replaceFirst("approval-", "");
+
+                bot.getDiscordApi().getUserById(id).thenAccept(approvedUser ->
+                    channel.sendMessage(approvedUser.getMentionTag()
+                            +  " please join Approval-Voice!")
+                );
+
+                break;
+            }
             case "*ban": {
                 if (isNotModerator(server, channel, user)) {
                     return;
