@@ -97,9 +97,31 @@ public class ApprovalCommands extends AbstractCommands {
                 String id = channelName.replaceFirst("approval-", "");
 
                 bot.getDiscordApi().getUserById(id).thenAccept(approvedUser ->
-                    channel.sendMessage(approvedUser.getMentionTag()
-                            +  " please join Approval-Voice!")
+                        channel.sendMessage(approvedUser.getMentionTag()
+                                + " please join Approval-Voice!")
                 );
+
+                break;
+            }
+            case "*wvc": {
+                if (isNotModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                message.delete();
+
+                String id = channelName.replaceFirst("approval-", "");
+
+                bot.getDiscordApi().getUserById(id).thenAccept(approvedUser ->
+                        channel.sendMessage(approvedUser.getMentionTag()
+                                + " this is an Islamic server with thousands of members," +
+                                " many of whom are young young. Unfortunately, we have been victims of raids" +
+                                " from malicious users who come here and send abusive messages." +
+                                " A quick voice chat helps weed out trolls and protect our members."));
 
                 break;
             }
