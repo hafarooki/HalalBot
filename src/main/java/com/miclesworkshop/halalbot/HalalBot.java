@@ -9,6 +9,7 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.DiscordEntity;
 import org.javacord.api.entity.channel.ChannelCategory;
+import org.javacord.api.entity.channel.RegularServerChannel;
 import org.javacord.api.entity.channel.ServerChannel;
 import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.message.Message;
@@ -248,12 +249,9 @@ public class HalalBot {
                         .create()));
 
         if (category.getChannels().size() == 50) {
-            Optional<ServerChannel> serverChannel =
-                category.getChannels().stream()
-                .filter(channel -> channel.getName().startsWith("approval-"))
-                .sorted(Comparator.comparing(
-                            DiscordEntity::getCreationTimestamp))
-                .findFirst();
+            Optional<RegularServerChannel> serverChannel = category.getChannels().stream()
+                    .filter(channel -> channel.getName().startsWith("approval-"))
+                    .min(Comparator.comparing(DiscordEntity::getCreationTimestamp));
 
             Optional<ServerTextChannel> textChannel;
 
