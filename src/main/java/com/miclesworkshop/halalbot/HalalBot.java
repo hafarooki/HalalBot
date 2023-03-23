@@ -143,7 +143,7 @@ public class HalalBot {
                         .setAuditLogReason("Jailed role was missing, created")
                         .setDisplaySeparately(false)
                         .setMentionable(true)
-                        .setPermissions(new PermissionsBuilder().setDenied(PermissionType.READ_MESSAGES).build())
+                        .setPermissions(new PermissionsBuilder().setDenied(PermissionType.VIEW_CHANNEL).build())
                         .create())));
     }
 
@@ -229,7 +229,7 @@ public class HalalBot {
 
             channel.createUpdater()
                     .addPermissionOverwrite(user, new PermissionsBuilder()
-                            .setAllowed(PermissionType.READ_MESSAGES).build())
+                            .setAllowed(PermissionType.VIEW_CHANNEL).build())
                     .update();
 
             notifyOfApprovalChannel(server, user, channel);
@@ -273,13 +273,13 @@ public class HalalBot {
                 .setName(channelName)
                 .setCategory(category)
                 .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
-                        .setDenied(PermissionType.READ_MESSAGES).build())
+                        .setDenied(PermissionType.VIEW_CHANNEL).build())
                 .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
-                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                        .setAllowed(PermissionType.VIEW_CHANNEL).build())
                 .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
-                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                        .setAllowed(PermissionType.VIEW_CHANNEL).build())
                 .addPermissionOverwrite(user, new PermissionsBuilder()
-                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                        .setAllowed(PermissionType.VIEW_CHANNEL).build())
                 .create());
 
         notifyOfApprovalChannel(server, user, channel);
@@ -351,13 +351,13 @@ public class HalalBot {
                         log.info("Creating #jail channel!");
                         return getOrRuntimeException(server.createTextChannelBuilder().setName("jail")
                                 .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
-                                        .setDenied(PermissionType.READ_MESSAGES).build())
+                                        .setDenied(PermissionType.VIEW_CHANNEL).build())
                                 .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
-                                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                                        .setAllowed(PermissionType.VIEW_CHANNEL).build())
                                 .addPermissionOverwrite(getJailedRole(server), new PermissionsBuilder()
-                                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                                        .setAllowed(PermissionType.VIEW_CHANNEL).build())
                                 .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
-                                        .setAllowed(PermissionType.READ_MESSAGES).build())
+                                        .setAllowed(PermissionType.VIEW_CHANNEL).build())
                                 .create());
                     });
 
@@ -377,11 +377,11 @@ public class HalalBot {
                                 return getOrRuntimeException(server.createTextChannelBuilder()
                                         .setName("approval-logs")
                                         .addPermissionOverwrite(server.getEveryoneRole(), new PermissionsBuilder()
-                                                .setDenied(PermissionType.READ_MESSAGES).build())
+                                                .setDenied(PermissionType.VIEW_CHANNEL).build())
                                         .addPermissionOverwrite(getApprovalModeratorRole(server), new PermissionsBuilder()
-                                                .setAllowed(PermissionType.READ_MESSAGES).build())
+                                                .setAllowed(PermissionType.VIEW_CHANNEL).build())
                                         .addPermissionOverwrite(discordApi.getYourself(), new PermissionsBuilder()
-                                                .setAllowed(PermissionType.READ_MESSAGES).build())
+                                                .setAllowed(PermissionType.VIEW_CHANNEL).build())
                                         .create());
                             });
 
