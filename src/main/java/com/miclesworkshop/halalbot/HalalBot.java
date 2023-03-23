@@ -137,10 +137,10 @@ public class HalalBot {
 
     public Role getJailedRole(Server server) {
         return server.getRoleById(getServerData(server).getJailedRoleId()).orElseGet(() ->
-                server.getRolesByName("Jailed").stream().findFirst().orElseGet(() -> getOrRuntimeException(server
+                server.getRolesByName("Private Channel").stream().findFirst().orElseGet(() -> getOrRuntimeException(server
                         .createRoleBuilder()
-                        .setName("Jailed")
-                        .setAuditLogReason("Jailed role was missing, created")
+                        .setName("Private Channel")
+                        .setAuditLogReason("Private Channel role was missing, created")
                         .setDisplaySeparately(false)
                         .setMentionable(true)
                         .setPermissions(new PermissionsBuilder().setDenied(PermissionType.VIEW_CHANNEL).build())
@@ -305,12 +305,13 @@ public class HalalBot {
                         "**1)** What is your faith/religion? (You don't have to be a Muslim to join!)",
                         "**2)** What is your gender (Male/Female) (Please specify your *biological, birth gender*)",
                         "**3)** Where did you hear of this server? " +
-                                "__(Please be detailed - if you heard it from a friend, give their name)__",
+                                "__(Please be detailed - if you heard it from a friend, give their Discord name in Name#1234 format)__",
                         "**4)** What do you want to do in this server?",
                         "Please type @Male Verification if you are male or @Female Verification if you are female " +
                                 "to ping a moderator who will be voice chatting with you for verification purposes.",
                         "If a mod doesn't respond, please wait patiently.",
-                        "*(This channel may be recorded)*"
+                        "*(This channel may be recorded)*",
+                                "Make sure to check pinned messages in the #approval channel for updates"
                 ), embedBuilder);
     }
 

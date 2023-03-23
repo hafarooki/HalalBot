@@ -103,6 +103,71 @@ public class ApprovalCommands extends AbstractCommands {
 
                 break;
             }
+
+            case "*fr":{
+                if (this.isNotModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!this.ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                message.delete();
+                String id = channelName.replaceFirst("approval-", "");
+                this.bot.getDiscordApi().getUserById(id).thenAccept((approvedUser) -> {
+                    channel.sendMessage(approvedUser.getMentionTag() + " please type the Discord name of the person who invited you in the Name#1234 format.");
+                });
+                break;
+        }
+            case "*all":{
+                if (this.isNotModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!this.ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                message.delete();
+                String id = channelName.replaceFirst("approval-", "");
+                this.bot.getDiscordApi().getUserById(id).thenAccept((approvedUser) -> {
+                    channel.sendMessage(approvedUser.getMentionTag() + " please answer every question, dont skip any.");
+                });
+                break;
+        }
+            case "*qns": {
+                if (this.isNotModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!this.ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                message.delete();
+                String id = channelName.replaceFirst("approval-", "");
+                this.bot.getDiscordApi().getUserById(id).thenAccept((approvedUser) -> {
+                    channel.sendMessage(approvedUser.getMentionTag() + " Answer the following:\n 1. What madhab do you follow?\n 2. What does a person need to believe in to be a Muslim?\n 3. What do you say 3 times when your head touches the floor in prayer?\n 4. A person worships Allah and a small statue, he prays 5 times a day and gives charity, is he a good Muslim?\n 5. Who is the current caliph? \nPing Approval Moderator or " + user.getMentionTag() + " after answering the questions \n");
+                });
+                break;
+            }
+            case "*qnd": {
+                if (this.isNotModerator(server, channel, user)) {
+                    return;
+                }
+
+                if (!this.ensureApprovalChannel(channel)) {
+                    return;
+                }
+
+                message.delete();
+                String id = channelName.replaceFirst("approval-", "");
+                this.bot.getDiscordApi().getUserById(id).thenAccept((approvedUser) -> {
+                    channel.sendMessage(approvedUser.getMentionTag() + " Answer all of the questions honestly and as best you can, your approval depends on it:\n 1. Explain briefly your religious beliefs.\n -Does it affirm a creator and what is this creator's nature?\n -What are your beliefs on an afterlife/after-death?\n -What is the purpose of life?\n 2. Why is spirituality important?\n 3. What is morality and where is it derived from?\n 4. Is Islam an evil religion, followed by evil people? Why or why not?\n 5. Are Muslims people who can be trusted? Why or why not?\n 6. What are your main information sources on Islam?\n 7. Do you think the actions of Muslims are representative of what Islam calls to?\n 8. What do you currently know about Islam?\n -What is the main Islamic doctrine?\n -What is the purpose of life?\n -What are the main differences that you know of between Islam and other religions?\n 9. How much contact do you have with Muslims in your daily life?\n -Are there many Muslims in your country?\n -Do you have Muslim friends?\n 10. Are you certain of your religious beliefs?\n -Do you believe Islam is flawed?\n -Do you want to prove it is?\nPing Approval Moderator or " + user.getMentionTag() + " after answering the questions \n");
+                });
+                break;
+            }
             case "*wvc": {
                 if (isNotModerator(server, channel, user)) {
                     return;
@@ -125,6 +190,7 @@ public class ApprovalCommands extends AbstractCommands {
 
                 break;
             }
+
             case "*ban": {
                 if (isNotModerator(server, channel, user)) {
                     return;

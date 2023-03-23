@@ -32,9 +32,15 @@ public class HelpCommand extends AbstractCommands {
                 "`*listroles` **:::** List all valid approval roles for `*approve`.\n" +
                 "`*addrole` **:::** Add a role for `*approve`.\n" +
                 "`*removerole` **:::** Remove a role for `*approve`.\n" +
+                "`*vc` **:::** Pings the applicant for joining the vc.\n" +
+                "`*wvc` **:::** Explains to applicants why they must vc.\n" +
+                "`*all` **:::** Tells the applicant to answer all questions.\n" +
+                "`*fr` **:::** Asks the applicant of the person who invited them to the server.\n" +
+                "`*qns` **:::** Questions for Muslim applicants.\n" +
+                "`*qnd` **:::** Questions for Non-Muslim applicants \n" +
                 "\n" +
                 "__***Jail***__\n" +
-                "`*jail [user(s)]` **:::** Send the given user(s) to jail.\n" +
-                "`*unjail [user(s)]` **:::** Remove the given user(s) from jail.");
+                "`*pc [user(s)]` **:::** Send the given user(s) to private channel.\n" +
+                "`*upc [user(s)]` **:::** Remove the given user(s) from private channel.");
     }
 }
