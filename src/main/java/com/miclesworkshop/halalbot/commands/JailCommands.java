@@ -15,11 +15,11 @@ public class JailCommands extends AbstractCommands {
     @Override
     protected void executeCommand(Server server, User user, ServerTextChannel channel, Message message,
                                   String channelName, String cmd, String[] args) {
-        if (!cmd.equals("*jail") && !cmd.equals("*unjail")) {
+        if (!cmd.equals("*pc") && !cmd.equals("*upc")) {
             return;
         }
 
-        boolean jail = cmd.equals("*jail");
+        boolean jail = cmd.equals("*pc");
 
         if (!server.hasPermission(user, PermissionType.KICK_MEMBERS)) {
             channel.sendMessage(user.getMentionTag() + " You don't have the KICK_MEMBERS permission!");
@@ -32,27 +32,27 @@ public class JailCommands extends AbstractCommands {
 
         for (User target : message.getMentionedUsers()) {
             if (jail && server.hasPermission(target, PermissionType.KICK_MEMBERS)) {
-                channel.sendMessage("Can't jail " + target.getDiscriminatedName());
+                channel.sendMessage("Can't place in Private Channel" + target.getDiscriminatedName());
                 continue;
             }
 
             if (isJailed(target, server) == jail) {
                 if (jail) {
-                    channel.sendMessage(target.getDiscriminatedName() + " is already jailed!");
+                    channel.sendMessage(target.getDiscriminatedName() + " is already in private channel!");
                 } else {
-                    channel.sendMessage(target.getDiscriminatedName() + " is already not jailed!");
+                    channel.sendMessage(target.getDiscriminatedName() + " is not in private channel!");
                 }
                 continue;
             }
 
             if (jail) {
-                target.addRole(bot.getJailedRole(server), "Jailed by " + user.getDiscriminatedName());
-                target.sendMessage("You have been jailed in " + server.getName() + "!");
-                channel.sendMessage("Jailed " + target.getDiscriminatedName());
+                target.addRole(bot.getJailedRole(server), "Put in Private Channel by " + user.getDiscriminatedName());
+                target.sendMessage("You have been placed in Private Channel in" + server.getName() + "!");
+                channel.sendMessage("Placed in Private Channel " + target.getDiscriminatedName());
             } else {
                 target.removeRole(bot.getJailedRole(server), "Unjailed by " + user.getDiscriminatedName());
-                target.sendMessage("You have been unjailed in " + server.getName() + "!");
-                channel.sendMessage("Unjailed " + target.getDiscriminatedName());
+                target.sendMessage("You have been removed from Private Channel in " + server.getName() + "!");
+                channel.sendMessage("Removed from Private Channel " + target.getDiscriminatedName());
             }
         }
     }
